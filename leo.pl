@@ -22,7 +22,9 @@ GetOptions(
 ) or die "Error in command line arguments\n";
 
 my %dispatch = (
-    "sync emacs" => sub { Emacs::sync(\%options) },
+    "sync emacs" => sub { $options{config} = 1; Emacs::sync(\%options); },
+    "sync emacs irclogs" => sub { $options{irclogs} = 1; Emacs::sync(\%options); },
+    "sync emacs authinfo" => sub { $options{authinfo} = 1; Emacs::sync(\%options); },
 );
 
 if ( $dispatch{ "@ARGV" } ) {
