@@ -23,8 +23,8 @@ GetOptions(
 
 my %dispatch = (
     "sync emacs" => sub { $options{config} = 1; Emacs::sync(\%options); },
-    "sync emacs irclogs" => sub { $options{irclogs} = 1; Emacs::sync(\%options); },
-    "sync emacs authinfo" => sub { $options{authinfo} = 1; Emacs::sync(\%options); },
+    "sync irclogs" => sub { $options{irclogs} = 1; Emacs::sync(\%options); },
+    "sync authinfo" => sub { $options{authinfo} = 1; Emacs::sync(\%options); },
 );
 
 if ( $dispatch{ "@ARGV" } ) {
