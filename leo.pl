@@ -4,34 +4,24 @@ use strict;
 use warnings;
 use feature 'say';
 
-use lib::relative 'lib';
-use Emacs;
-
-use FindBin;
 use Path::Tiny;
 use IPC::Run3;
-use Getopt::Long qw/ GetOptions /;
-use Term::ANSIColor qw/ :pushpop colored color /;
-
-local $SIG{__WARN__} = sub { print colored( $_[0], 'yellow' ); };
-
-my %options = ();
-GetOptions(
-    \%options,
-    qw{ verbose debug }
-) or die "Error in command line arguments\n";
 
 my %dispatch = (
-    "sync emacs" => sub { $options{config} = 1; Emacs::sync(\%options); },
-    "sync irclogs" => sub { $options{irclogs} = 1; Emacs::sync(\%options); },
-    "sync authinfo" => sub { $options{authinfo} = 1; Emacs::sync(\%options); },
+    "archive" => \&archive,
 );
 
-if ( $dispatch{ "@ARGV" } ) {
-    $dispatch{ "@ARGV" }->();
+if ( $ARGV[0]
+         and $dispatch{ $ARGV[0] } ) {
+    $dispatch{ $ARGV[0] }->();
+} elsif ( scalar @ARGV == 0 ) {
+    HelpMessage();
 } else {
-    my $file = path($FindBin::RealBin . "/share/theo");
-    my @insults = split/\n%\n/, $file->slurp;
-    print LOCALCOLOR RED "[ERR] " if $options{verbose};
-    say LOCALCOLOR YELLOW $insults[ rand @insults ];
+    say "leo: no such option";
+}
+
+sub HelpMessage {
+    say qq{Usage:
+    archive
+        Create an archive.}
 }
