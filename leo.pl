@@ -120,13 +120,16 @@ Options:
     --verbose};
 }
 
-if ( $ARGV[0] and $dispatch{ $ARGV[0] } ) {
-    path($archive_dir)->mkpath; # Create archive directory.
-    $dispatch{ $ARGV[0] }->();
-} elsif ( scalar @ARGV == 0 ) {
-    HelpMessage();
-} else {
-    die say "leo: no such option\n";
+HelpMessage() if scalar @ARGV == 0;
+
+path($archive_dir)->mkpath; # Create archive directory.
+foreach my $arg ( @ARGV ) {
+    say "--------------------------------";
+    if ( $dispatch{ $arg } ) {
+        $dispatch{ $arg }->();
+    } else {
+        die say "leo: no such option\n";
+    }
 }
 
 sub tar_create { run3 ["/bin/tar", "cf", @_]; }
