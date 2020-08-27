@@ -38,7 +38,36 @@ sub HelpMessage {
 }
 
 sub rsync { run3 ["openrsync", @_]; }
-sub tar_create { run3 ["/bin/tar", "cf", @_]; }
+
+# User must pass $tar_file first & `-C' optionally.
+sub tar_create {
+    my $tar_file = shift @_;
+
+    my ( $cwd, @archive_paths );
+    # Passing `-C' won't print "tar: Removing leading / from absolute
+    # path names in the archive" to STDERR in some cases.
+    if ( $_[0] eq "-C" ) {
+        $cwd = $_[1];
+
+        # Remove `-C' & cwd to get @archive_paths;
+        my @tmp = @_;
+        shift @tmp; shift @tmp;
+        @archive_paths = @tmp;
+    } else {
+        @archive_paths = @_;
+    }
+
+    say "Archive file: $tar_file\n";
+    run3 ["/bin/tar", "cf", $tar_file, @_];
+
+    $? # tar returns 1 on errors.
+        ? die "Archive creation failed :: $?\n"
+        # Print absolute paths for all archived files/directories.
+        : say path($_)->absolute($cwd), " archived."
+        foreach @archive_paths;
+
+    print "\n" and tar_list($tar_file) if $options{verbose};
+}
 sub tar_list { run3 ["/bin/tar", "tvf", @_]; }
 
 # Creating tars of files.
@@ -46,26 +75,12 @@ sub archive {
     my %archive_dispatch = (
         "documents" => sub {
             tar_create("/tmp/archive/documents.tar",
-                       # Won't print "tar: Removing leading / from
-                       # absolute path names in the archive" to
-                       # STDERR.
                        "-C", "$ENV{HOME}/documents", ".");
-
-            $? # tar returns 1 on errors.
-                ? die "Archive creation failed :: $?\n"
-                : say "$ENV{HOME}/documents archived.";
-            tar_list("/tmp/archive/documents.tar") if $options{verbose};
         },
         "journal" => sub {
             tar_create("/tmp/archive/journal.tar",
                        "-C", "$ENV{HOME}/documents",
                        "andinus.org.gpg", "archive.org.gpg");
-
-            $?
-                ? die "Archive creation failed :: $?\n"
-                : say "$ENV{HOME}/documents/andinus.org.gpg,
-$ENV{HOME}/documents/archive.org.gpg archived.";
-            tar_list("/tmp/archive/journal.tar") if $options{verbose};
         },
     );
 
