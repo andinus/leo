@@ -21,31 +21,72 @@ my $ymd = ymd(); # YYYY-MM-DD.
 # Dispatch table.
 my %dispatch = (
     "documents" => sub {
-        tar_create("$archive_dir/documents_$ymd.tar",
-                   "-C", "$ENV{HOME}/documents", ".");
+        archive("$archive_dir/documents_$ymd.tar",
+                "-C", "$ENV{HOME}/documents", ".");
     },
     "journal" => sub {
-        tar_create("$archive_dir/journal_$ymd.tar",
-                   "-C", "$ENV{HOME}/documents",
-                   "andinus.org.gpg", "archive.org.gpg");
+        archive("$archive_dir/journal_$ymd.tar",
+                "-C", "$ENV{HOME}/documents",
+                "andinus.org.gpg", "archive.org.gpg");
     },
     "ssh" => sub {
-        tar_create("$archive_dir/ssh_$ymd.tar",
-                   "-C", "$ENV{HOME}/.ssh", ".");
+        archive("$archive_dir/ssh_$ymd.tar",
+                "-C", "$ENV{HOME}/.ssh", ".");
     },
     "pass" => sub {
-        tar_create("$archive_dir/pass_$ymd.tar",
-                   "-C", "$ENV{HOME}/.password-store", ".");
+        archive("$archive_dir/pass_$ymd.tar",
+                "-C", "$ENV{HOME}/.password-store", ".");
     },
 );
 
-if ( $ARGV[0] and $dispatch{ $ARGV[0] } ) {
-    path($archive_dir)->mkpath; # Create archive directory.
-    $dispatch{ $ARGV[0] }->();
-} elsif ( scalar @ARGV == 0 ) {
-    HelpMessage();
-} else {
-    die say "leo: no such option\n";
+# User must pass $tar_file first & `-C' optionally.
+sub archive {
+    my $tar_file = shift @_;
+
+    my ( $cwd, @archive_paths );
+    # Passing `-C' won't print "tar: Removing leading / from absolute
+    # path names in the archive" to STDERR in some cases.
+    if ( $_[0] eq "-C" ) {
+        $cwd = $_[1];
+
+        # Remove `-C' & cwd to get @archive_paths;
+        my @tmp = @_;
+        shift @tmp; shift @tmp;
+        @archive_paths = @tmp;
+    } else {
+        @archive_paths = @_;
+    }
+
+    say "Archive file: $tar_file";
+    warn "$tar_file exists, might overwrite.\n" if -e $tar_file;
+    print "\n";
+
+    tar_create($tar_file, @_)
+
+    $? # tar returns 1 on errors.
+        ? die "Archive creation failed :: $?\n"
+        # Print absolute paths for all archived files/directories.
+        : say path($_)->absolute($cwd), " archived."
+        foreach @archive_paths;
+
+    print "\n" and tar_list($tar_file) if $options{verbose};
+}
+
+sub tar_create { run3 ["/bin/tar" , "cf", @_]; }
+sub tar_list { run3 ["/bin/tar", "tvf", @_]; }
+
+sub ymd {
+    my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) =
+        localtime(time);
+
+    $year += 1900; # $year contains the number of years since 1900.
+
+    # $mon the month in the range 0..11 , with 0 indicating January
+    # and 11 indicating December.
+    my @months = qw( 01 02 03 04 05 06 07 08 09 10 11 12 );
+    my $month = $months[$mon];
+
+    return "$year-$month-$mday";
 }
 
 sub HelpMessage {
@@ -69,55 +110,11 @@ Options:
         Sign files with $gpg_fingerprint};
 }
 
-
-# User must pass $tar_file first & `-C' optionally.
-sub tar_create {
-    my $tar_file = shift @_;
-
-    my ( $cwd, @archive_paths );
-    # Passing `-C' won't print "tar: Removing leading / from absolute
-    # path names in the archive" to STDERR in some cases.
-    if ( $_[0] eq "-C" ) {
-        $cwd = $_[1];
-
-        # Remove `-C' & cwd to get @archive_paths;
-        my @tmp = @_;
-        shift @tmp; shift @tmp;
-        @archive_paths = @tmp;
-    } else {
-        @archive_paths = @_;
-    }
-
-    say "Archive file: $tar_file";
-    warn "$tar_file exists, might overwrite.\n" if -e $tar_file;
-    print "\n";
-
-    run3 ["/bin/tar", "cf", $tar_file, @_];
-
-    $? # tar returns 1 on errors.
-        ? die "Archive creation failed :: $?\n"
-        # Print absolute paths for all archived files/directories.
-        : say path($_)->absolute($cwd), " archived."
-        foreach @archive_paths;
-
-    print "\n" and tar_list($tar_file) if $options{verbose};
-}
-sub tar_list { run3 ["/bin/tar", "tvf", @_]; }
-
-sub ymd {
-    my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) =
-        localtime(time);
-
-    $year += 1900; # $year contains the number of years since 1900.
-
-    # $mon the month in the range 0..11 , with 0 indicating January
-    # and 11 indicating December.
-    my @months = qw( 01 02 03 04 05 06 07 08 09 10 11 12 );
-    my $month = $months[$mon];
-
-    return "$year-$month-$mday";
-}
-
-# Creating tars of files.
-sub archive {
+if ( $ARGV[0] and $dispatch{ $ARGV[0] } ) {
+    path($archive_dir)->mkpath; # Create archive directory.
+    $dispatch{ $ARGV[0] }->();
+} elsif ( scalar @ARGV == 0 ) {
+    HelpMessage();
+} else {
+    die say "leo: no such option\n";
 }
