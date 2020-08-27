@@ -57,7 +57,10 @@ sub tar_create {
         @archive_paths = @_;
     }
 
-    say "Archive file: $tar_file\n";
+    say "Archive file: $tar_file";
+    warn "$tar_file exists, might overwrite.\n" if -e $tar_file;
+    print "\n";
+
     run3 ["/bin/tar", "cf", $tar_file, @_];
 
     $? # tar returns 1 on errors.
