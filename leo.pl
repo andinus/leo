@@ -35,8 +35,9 @@ my %profile = (
 );
 
 # Add more directories to %profile.
-foreach my $tmp_prof (qw( emails music projects documents videos pictures
-                      downloads .ssh .password-store .mozilla )) {
+foreach my $tmp_prof (qw( emails music projects documents videos .ssh
+                          downloads pictures .password-store .mozilla
+                          fortunes )) {
     $profile{$tmp_prof} = [$tmp_prof];
 }
 
