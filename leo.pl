@@ -20,9 +20,9 @@ $options{delete} = $ENV{LEO_DELETE};
 
 my $gpg_fingerprint = "D9AE4AEEE1F1B3598E81D9DFB67D55D482A799FD";
 my $ymd = ymd(); # YYYY-MM-DD.
-my $archive_dir = "/tmp/archive/$ymd";
+my $backup_dir = "/tmp/backup/$ymd";
 
-path($archive_dir)->mkpath; # Create archive directory.
+path($backup_dir)->mkpath; # Create backup directory.
 my $prof;
 
 my %profile = (
@@ -56,7 +56,7 @@ foreach my $arg ( @ARGV ) {
             if $prof eq "journal" and $options{encrypt};
 
         # Deref the array here because we want flattened list.
-        archive("$archive_dir/${arg}.tar", $profile{$arg}->@*);
+        backup("$backup_dir/${arg}.tar", $profile{$arg}->@*);
 
         $options{encrypt} = $tmp if $prof eq "journal";
     } else {
@@ -65,27 +65,27 @@ foreach my $arg ( @ARGV ) {
 }
 
 # User must pass $tar_file first.
-sub archive {
+sub backup {
     my $tar_file = shift @_;
-    my @archive_paths = @_;
+    my @backup_paths = @_;
 
-    say "Archive: $tar_file";
+    say "Backup: $tar_file";
     warn "[WARN] $tar_file exists, might overwrite.\n" if -e $tar_file;
     print "\n";
     # All paths should be relative to $ENV{HOME}.
     tar_create($tar_file, "-C", $ENV{HOME}, @_);
 
     $? # tar returns 1 on errors.
-        ? die "Archive creation failed :: $?\n"
-        # Print absolute paths for all archived files/directories.
-        : say path($_)->absolute($ENV{HOME}), " archived."
-        foreach @archive_paths;
+        ? die "Backup creation failed :: $?\n"
+        # Print absolute paths for all backup files/directories.
+        : say path($_)->absolute($ENV{HOME}), " backed up."
+        foreach @backup_paths;
 
     print "\n" and tar_list($tar_file) if $options{verbose};
     encrypt_sign($tar_file) if $options{encrypt} or $options{sign};
 }
 
-# Encrypt, Sign archives.
+# Encrypt, Sign backups.
 sub encrypt_sign() {
     my $file = shift @_;
     my @options = ();
@@ -112,7 +112,7 @@ sub encrypt_sign() {
 }
 
 sub HelpMessage {
-    say qq{Archive files to $archive_dir.
+    say qq{Backup files to $backup_dir.
 
 Profile:};
     foreach my $prof (sort keys %profile) {
@@ -128,7 +128,7 @@ Options:
     --sign
         Sign files with $gpg_fingerprint
     --delete
-        Delete the archive after running gpg2
+        Delete the tar file after running gpg2
     --verbose
     --help};
 }

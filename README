@@ -18,8 +18,8 @@ Table of Contents
 3 History
 
 
-Leo is my archival program. It creates tar(1) files from a pre-defined
-list. It can encrypt/sign files with gpg2(1).
+Leo is a simple backup program. It creates tar(1) files from a
+pre-defined list. It can encrypt/sign files with gpg2(1).
 
 • Web-site: [https://andinus.nand.sh/leo]
 • Source: [https://git.tilde.institute/andinus/leo]
@@ -29,8 +29,8 @@ list. It can encrypt/sign files with gpg2(1).
 1 Documentation
 ═══════════════
 
-  I use this to quickly archive some of my files & copy them to another
-  computer as a backup.
+  I use this to quickly backup some of my files. It works on profiles,
+  profiles are simple lists of files which get backed up.
 
 
 1.1 Profile
@@ -38,9 +38,9 @@ list. It can encrypt/sign files with gpg2(1).
 
   Profile is a simple hash table which contains the list of profiles.
   The profiles are mapped to a list of file paths relative to `$HOME'
-  which are to be archived.
+  which are to be backed up.
 
-  Complex profiles are hard coded & simple ones are generated. Complex
+  Complex profiles are hard-coded & simple ones are generated. Complex
   profiles include profiles that have multiple files or are a mix or
   files & directories. Simple profiles are profiles with just single
   directory.
@@ -68,7 +68,7 @@ list. It can encrypt/sign files with gpg2(1).
   `encrypt_sign' handles `gpg2' related functions. It passes `--yes' by
   default.
 
-  *Note*: `gpg2' might compress the archives depending on your config.
+  *Note*: `gpg2' might compress the backups depending on your config.
    Default is to enable compression, if you don't want this then add `-z
    0' to `@options'. `-z' specifies the compression level & 0 means no
    compression.
@@ -81,7 +81,7 @@ list. It can encrypt/sign files with gpg2(1).
 1.2.2 delete
 ╌╌╌╌╌╌╌╌╌╌╌╌
 
-  Removes the archive file after running gpg2(1). This means that either
+  Removes the tar file after running gpg2(1). This means that either
   `encrypt' or `sign' option must be passed.
 
 
@@ -123,3 +123,7 @@ list. It can encrypt/sign files with gpg2(1).
   that function. So, it's not a meta-program anymore. I was thinking of
   creating something that does all the things for me but that'll be too
   complex.
+
+  Later on the same day I removed dispatch table & switched to using
+  simple hash of lists to store backup paths mapped to profiles. And
+  also changed the word "archive" to "backup" everywhere.
