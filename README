@@ -12,7 +12,8 @@ Table of Contents
 .. 1.1 encrypt/sign
 .. 1.2 delete
 .. 1.3 help
-2 History
+2 Example
+3 History
 
 
 Leo is my archival program. It creates tar(1) files from a pre-defined
@@ -46,6 +47,16 @@ list. It can encrypt/sign files with gpg2(1).
   I use this to quickly archive some of my files & copy them to another
   computer as a backup.
 
+  Some options can also be passed through environment variables. That
+  allows for configuration in shell rc file & the user can run leo
+  directly without looking at options.
+
+  ━━━━━━━━━━━━━━━━━━━━━━
+   encrypt  LEO_ENCRYPT
+   sign     LEO_SIGN
+   delete   LEO_DELETE
+  ━━━━━━━━━━━━━━━━━━━━━━
+
 
 1.1 encrypt/sign
 ────────────────
@@ -72,7 +83,22 @@ list. It can encrypt/sign files with gpg2(1).
   Running just `leo' will print help.
 
 
-2 History
+2 Example
+═════════
+
+  ┌────
+  │ # This will encrypt, sign & also delete the tar file for documents,
+  │ # journal, pass & ssh profile.
+  │ leo --encrypt --sign --delete documents journal pass ssh
+  │
+  │ # This will do the same. You can add these environment variables to
+  │ # your shell rc & then just run ``leo documents journal ssh pass'' to
+  │ # do the same.
+  │ LEO_ENCRYPT=1 LEO_SIGN=1 LEO_DELETE=1 leo documents journal ssh pass
+  └────
+
+
+3 History
 ═════════
 
   This was Leo's initial description:
