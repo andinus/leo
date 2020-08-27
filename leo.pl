@@ -22,43 +22,45 @@ my $gpg_fingerprint = "D9AE4AEEE1F1B3598E81D9DFB67D55D482A799FD";
 my $archive_dir = "/tmp/archive";
 my $ymd = ymd(); # YYYY-MM-DD.
 
-# Dispatch table.
+# Dispatch table. All paths should be relative to $ENV{HOME}.
 my %dispatch = (
     journal => sub {
         my $tmp = $options{encrypt} and undef $options{encrypt}
             if $options{encrypt};
         archive("$archive_dir/journal_$ymd.tar",
-                "-C", "$ENV{HOME}/documents",
-                "andinus.org.gpg", "archive.org.gpg");
+                "documents/andinus.org.gpg", "documents/archive.org.gpg");
         $options{encrypt} = $tmp;
+    },
+    emacs => sub {
+        archive("$archive_dir/emacs_$ymd.tar", ".emacs.d", ".elfeed",
+                ".org-timestamps");
+    },
+    config => sub {
+        archive("$archive_dir/config_$ymd.tar",
+                qw{ .config .kshrc .kshrc.d .tmux.conf .xsession
+                    .screenlayout .mg .mbsyncrc .fehbg .profile .remind
+                    .plan .authinfo.gpg .Xresources });
     },
 );
 
-# These are the directories to be added to dispatch table but have
-# path names different from their profile names.
+# This adds directories with different profile name and path.
 my %directories = (
     ssh => "$ENV{HOME}/.ssh",
     pass => "$ENV{HOME}/.password-store",
     mozilla => "$ENV{HOME}/.mozilla",
-    config => "$ENV{HOME}/.config",
-    emacs => "$ENV{HOME}/.emacs.d",
-    elfeed => "$ENV{HOME}/.elfeed",
 );
 
 foreach my $dir (sort keys %directories) {
     $dispatch{$dir} = sub {
-        archive("$archive_dir/${dir}_${ymd}.tar",
-                "-C", "$directories{$dir}", ".");
+        archive("$archive_dir/${dir}_${ymd}.tar", "$directories{$dir}");
     };
 }
 
-# This adds the directories that have same path relative to $ENV{HOME}
-# as profile name.
+# This adds the directories with same profile name as path.
 foreach my $profile (qw( emails music projects documents videos pictures
                          downloads )) {
     $dispatch{$profile} = sub {
-        archive("$archive_dir/${profile}_$ymd.tar",
-                "-C", "$ENV{HOME}/$profile", ".");
+        archive("$archive_dir/${profile}_$ymd.tar", $profile);
     };
 }
 
@@ -66,33 +68,21 @@ foreach my $profile (qw( emails music projects documents videos pictures
 sub archive {
     my $tar_file = shift @_;
 
-    my ( $cwd, @archive_paths );
-    # Passing `-C' won't print "tar: Removing leading / from absolute
-    # path names in the archive" to STDERR in some cases.
-    if ( $_[0] eq "-C" ) {
-        $cwd = $_[1];
-
-        # Remove `-C' & cwd to get @archive_paths;
-        my @tmp = @_;
-        shift @tmp; shift @tmp;
-        @archive_paths = @tmp;
-    } else {
-        @archive_paths = @_;
-    }
+    my @archive_paths = @_;
 
     say "Archive: $tar_file";
     warn "[WARN] $tar_file exists, might overwrite.\n" if -e $tar_file;
     print "\n";
 
-    tar_create($tar_file, @_);
+    tar_create($tar_file, "-C", $ENV{HOME}, @_);
 
     $? # tar returns 1 on errors.
         ? die "Archive creation failed :: $?\n"
         # Print absolute paths for all archived files/directories.
-        : say path($_)->absolute($cwd), " archived."
+        : say path($_)->absolute($ENV{HOME}), " archived."
         foreach @archive_paths;
 
-    tar_list($tar_file) if $options{verbose};
+    print "\n" and tar_list($tar_file) if $options{verbose};
     encrypt_sign($tar_file) if $options{encrypt} or $options{sign};
 }
 
