@@ -76,8 +76,9 @@ sub archive {
 # Encrypt, Sign archives.
 sub encrypt_sign() {
     my $file = shift @_;
-    my @options = ("--recipient", $gpg_fingerprint);
-    push @options, "--encrypt" if $options{encrypt};
+    my @options = ();
+    push @options, "--recipient", $gpg_fingerprint, "--encrypt"
+        if $options{encrypt};
     push @options, "--sign" if $options{sign};
     push @options, "--verbose" if $options{verbose};
 
