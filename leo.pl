@@ -57,8 +57,8 @@ sub archive {
         @archive_paths = @_;
     }
 
-    say "Archive file: $tar_file";
-    warn "$tar_file exists, might overwrite.\n" if -e $tar_file;
+    say "Archive: $tar_file";
+    warn "[WARN] $tar_file exists, might overwrite.\n" if -e $tar_file;
     print "\n";
 
     tar_create($tar_file, @_);
@@ -69,7 +69,22 @@ sub archive {
         : say path($_)->absolute($cwd), " archived."
         foreach @archive_paths;
 
-    print "\n" and tar_list($tar_file) if $options{verbose};
+    tar_list($tar_file) if $options{verbose};
+    encrypt_sign($tar_file) if $options{encrypt} or $options{sign};
+}
+
+# Encrypt, Sign archives.
+sub encrypt_sign() {
+    my $file = shift @_;
+    my @options = ("--recipient", $gpg_fingerprint);
+    push @options, "--encrypt" if $options{encrypt};
+    push @options, "--sign" if $options{sign};
+    push @options, "--verbose" if $options{verbose};
+
+    say "\nEncrypt/Sign: $file";
+    run3 ["gpg2", "--yes", "-o", "$file.gpg", @options, $file];
+    warn "[WARN] $file.gpg exists, might overwrite.\n" if -e "$file.gpg";
+    say "\nOutput: $file.gpg";
 }
 
 sub HelpMessage {
@@ -90,7 +105,8 @@ Options:
     --encrypt
         Encrypt files with $gpg_fingerprint
     --sign
-        Sign files with $gpg_fingerprint};
+        Sign files with $gpg_fingerprint
+    --verbose};
 }
 
 if ( $ARGV[0] and $dispatch{ $ARGV[0] } ) {
@@ -102,7 +118,7 @@ if ( $ARGV[0] and $dispatch{ $ARGV[0] } ) {
     die say "leo: no such option\n";
 }
 
-sub tar_create { run3 ["/bin/tar" , "cf", @_]; }
+sub tar_create { run3 ["/bin/tar", "cf", @_]; }
 sub tar_list { run3 ["/bin/tar", "tvf", @_]; }
 
 sub ymd {
