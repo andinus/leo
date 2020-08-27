@@ -25,9 +25,12 @@ my %dispatch = (
                 "-C", "$ENV{HOME}/documents", ".");
     },
     "journal" => sub {
+        my $tmp = $options{encrypt} and undef $options{encrypt}
+            if $options{encrypt};
         archive("$archive_dir/journal_$ymd.tar",
                 "-C", "$ENV{HOME}/documents",
                 "andinus.org.gpg", "archive.org.gpg");
+        $options{encrypt} = $tmp;
     },
     "ssh" => sub {
         archive("$archive_dir/ssh_$ymd.tar",
@@ -89,7 +92,10 @@ sub encrypt_sign() {
 
     $? # We assume non-zero is an error.
         ? die "Encrypt/Sign failed :: $?\n"
-        : say "\nOutput: $file.gpg";
+        : print "\nOutput: $file.gpg";
+    print " [Encrypted]" if $options{encrypt};
+    print " [Signed]" if $options{sign};
+    print "\n";
 
     unlink $file and say "$file deleted."
         or warn "[WARN] Could not delete $file: $!\n"
