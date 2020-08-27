@@ -69,6 +69,10 @@ list. It can encrypt/sign files with gpg2(1).
    0' to `@options'. `-z' specifies the compression level & 0 means no
    compression.
 
+  *Note*: My journal is encrypted so to prevent re-encryption `encrypt'
+   option is not passed to gpg2. This only affects journal profile. So
+   `leo --encrypt journal pass' will still encrypt pass.
+
 
 1.2 delete
 ──────────
