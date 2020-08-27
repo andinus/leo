@@ -11,7 +11,7 @@ use Getopt::Long qw/ GetOptions /;
 my %options = ();
 GetOptions(
     \%options,
-    qw{ verbose encrypt sign }
+    qw{ verbose encrypt sign delete }
 ) or die "Error in command line arguments\n";
 
 my $gpg_fingerprint = "D9AE4AEEE1F1B3598E81D9DFB67D55D482A799FD";
@@ -85,6 +85,9 @@ sub encrypt_sign() {
     run3 ["gpg2", "--yes", "-o", "$file.gpg", @options, $file];
     warn "[WARN] $file.gpg exists, might overwrite.\n" if -e "$file.gpg";
     say "\nOutput: $file.gpg";
+
+    unlink $file and say "$file deleted."
+        or warn "[WARN] Could not delete $file: $!\n";
 }
 
 sub HelpMessage {
@@ -106,6 +109,8 @@ Options:
         Encrypt files with $gpg_fingerprint
     --sign
         Sign files with $gpg_fingerprint
+    --delete
+        Delete the archive after running gpg2
     --verbose};
 }
 
