@@ -98,6 +98,10 @@ sub archive {
             tar_create("/tmp/archive/ssh_$ymd.tar",
                        "-C", "$ENV{HOME}/.ssh", ".");
         },
+        "pass" => sub {
+            tar_create("/tmp/archive/pass_$ymd.tar",
+                       "-C", "$ENV{HOME}/.password-store", ".");
+        },
     );
 
     shift @ARGV;
@@ -121,6 +125,8 @@ Usage:
         Archive $ENV{HOME}/documents/andinus.org.gpg,
                 $ENV{HOME}/documents/archive.org.gpg
     ssh
-        Archive $ENV{HOME}/.ssh};
+        Archive $ENV{HOME}/.ssh
+    pass
+        Archive $ENV{HOME}/.password-store};
     }
 }
