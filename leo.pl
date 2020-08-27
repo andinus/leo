@@ -24,11 +24,7 @@ my $ymd = ymd(); # YYYY-MM-DD.
 
 # Dispatch table.
 my %dispatch = (
-    "documents" => sub {
-        archive("$archive_dir/documents_$ymd.tar",
-                "-C", "$ENV{HOME}/documents", ".");
-    },
-    "journal" => sub {
+    journal => sub {
         my $tmp = $options{encrypt} and undef $options{encrypt}
             if $options{encrypt};
         archive("$archive_dir/journal_$ymd.tar",
@@ -36,15 +32,21 @@ my %dispatch = (
                 "andinus.org.gpg", "archive.org.gpg");
         $options{encrypt} = $tmp;
     },
-    "ssh" => sub {
-        archive("$archive_dir/ssh_$ymd.tar",
-                "-C", "$ENV{HOME}/.ssh", ".");
-    },
-    "pass" => sub {
-        archive("$archive_dir/pass_$ymd.tar",
-                "-C", "$ENV{HOME}/.password-store", ".");
-    },
 );
+
+# This adds the directories that have same path relative to $ENV{HOME}
+# as profile name.
+foreach my $profile (qw( emails music projects documents .ssh
+                         .password-store)) {
+    $dispatch{$profile} = sub {
+        archive("$archive_dir/${profile}_$ymd.tar",
+                "-C", "$ENV{HOME}/$profile", ".");
+    };
+}
+
+# Aliases for inconvenient paths.
+$dispatch{ssh} = $dispatch{".ssh"};
+$dispatch{pass} = $dispatch{".password-store"};
 
 # User must pass $tar_file first & `-C' optionally.
 sub archive {
@@ -134,11 +136,11 @@ HelpMessage() if scalar @ARGV == 0;
 
 path($archive_dir)->mkpath; # Create archive directory.
 foreach my $arg ( @ARGV ) {
-    say "--------------------------------";
     if ( $dispatch{ $arg } ) {
+        say "--------------------------------";
         $dispatch{ $arg }->();
     } else {
-        die say "leo: no such option\n";
+        die "leo: no such option\n";
     }
 }
 
