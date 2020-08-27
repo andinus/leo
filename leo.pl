@@ -82,12 +82,17 @@ sub encrypt_sign() {
     push @options, "--verbose" if $options{verbose};
 
     say "\nEncrypt/Sign: $file";
-    run3 ["gpg2", "--yes", "-o", "$file.gpg", @options, $file];
     warn "[WARN] $file.gpg exists, might overwrite.\n" if -e "$file.gpg";
-    say "\nOutput: $file.gpg";
+
+    run3 ["gpg2", "--yes", "-o", "$file.gpg", @options, $file];
+
+    $? # We assume non-zero is an error.
+        ? die "Encrypt/Sign failed :: $?\n"
+        : say "\nOutput: $file.gpg";
 
     unlink $file and say "$file deleted."
-        or warn "[WARN] Could not delete $file: $!\n";
+        or warn "[WARN] Could not delete $file: $!\n"
+        if $options{delete};
 }
 
 sub HelpMessage {
