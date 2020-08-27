@@ -22,58 +22,57 @@ my $gpg_fingerprint = "D9AE4AEEE1F1B3598E81D9DFB67D55D482A799FD";
 my $archive_dir = "/tmp/archive";
 my $ymd = ymd(); # YYYY-MM-DD.
 
-# Dispatch table. All paths should be relative to $ENV{HOME}.
-my %dispatch = (
-    journal => sub {
+path($archive_dir)->mkpath; # Create archive directory.
+my $prof;
+
+my %profile = (
+    journal => [qw( documents/andinus.org.gpg
+                    documents/archive.org.gpg )],
+    emacs   => [qw( .emacs.d .elfeed .org-timestamps )],
+    config  => [qw( .config .kshrc .kshrc.d .tmux.conf .xsession .remind
+                    .screenlayout .mg .mbsyncrc .fehbg .profile .plan
+                    .authinfo.gpg .Xresources )],
+);
+
+# Add more directories to %profile.
+foreach my $tmp_prof (qw( emails music projects documents videos pictures
+                      downloads .ssh .password-store .mozilla )) {
+    $profile{$tmp_prof} = [$tmp_prof];
+}
+
+# Aliases.
+$profile{ssh} = $profile{".ssh"};
+$profile{pass} = $profile{".password-store"};
+$profile{mozilla} = $profile{".mozilla"};
+
+HelpMessage() and exit 0 if scalar @ARGV == 0;
+foreach my $arg ( @ARGV ) {
+    $prof = $arg; # Set $prof.
+    if ( $profile{ $arg } ) {
+        say "++++++++********++++++++";
+
+        # No encryption for journal profile.
         my $tmp = $options{encrypt} and undef $options{encrypt}
-            if $options{encrypt};
-        archive("$archive_dir/journal_$ymd.tar",
-                "documents/andinus.org.gpg", "documents/archive.org.gpg");
-        $options{encrypt} = $tmp;
-    },
-    emacs => sub {
-        archive("$archive_dir/emacs_$ymd.tar", ".emacs.d", ".elfeed",
-                ".org-timestamps");
-    },
-    config => sub {
-        archive("$archive_dir/config_$ymd.tar",
-                qw{ .config .kshrc .kshrc.d .tmux.conf .xsession
-                    .screenlayout .mg .mbsyncrc .fehbg .profile .remind
-                    .plan .authinfo.gpg .Xresources });
-    },
-);
+            if $prof eq "journal" and $options{encrypt};
 
-# This adds directories with different profile name and path.
-my %directories = (
-    ssh => "$ENV{HOME}/.ssh",
-    pass => "$ENV{HOME}/.password-store",
-    mozilla => "$ENV{HOME}/.mozilla",
-);
+        # Deref the array here because we want flattened list.
+        archive("$archive_dir/${arg}_$ymd.tar", $profile{$arg}->@*);
 
-foreach my $dir (sort keys %directories) {
-    $dispatch{$dir} = sub {
-        archive("$archive_dir/${dir}_${ymd}.tar", "$directories{$dir}");
-    };
+        $options{encrypt} = $tmp if $prof eq "journal";
+    } else {
+        warn "[WARN] leo: no such option :: $arg \n";
+    }
 }
 
-# This adds the directories with same profile name as path.
-foreach my $profile (qw( emails music projects documents videos pictures
-                         downloads )) {
-    $dispatch{$profile} = sub {
-        archive("$archive_dir/${profile}_$ymd.tar", $profile);
-    };
-}
-
-# User must pass $tar_file first & `-C' optionally.
+# User must pass $tar_file first.
 sub archive {
     my $tar_file = shift @_;
-
     my @archive_paths = @_;
 
     say "Archive: $tar_file";
     warn "[WARN] $tar_file exists, might overwrite.\n" if -e $tar_file;
     print "\n";
-
+    # All paths should be relative to $ENV{HOME}.
     tar_create($tar_file, "-C", $ENV{HOME}, @_);
 
     $? # tar returns 1 on errors.
@@ -115,17 +114,14 @@ sub encrypt_sign() {
 sub HelpMessage {
     say qq{Archive files to $archive_dir.
 
-Usage:
-    documents
-        Archive $ENV{HOME}/documents
-    journal
-        Archive $ENV{HOME}/documents/andinus.org.gpg,
-                $ENV{HOME}/documents/archive.org.gpg
-    ssh
-        Archive $ENV{HOME}/.ssh
-    pass
-        Archive $ENV{HOME}/.password-store
-
+Profile:};
+    foreach my $prof (sort keys %profile) {
+        next if substr($prof, 0, 1) eq "."; # Profiles starting with a
+                                            # dot will have alias.
+        print "    $prof\n";
+        print "        $_\n" foreach $profile{$prof}->@*;
+    }
+    say qq{
 Options:
     --encrypt
         Encrypt files with $gpg_fingerprint
@@ -136,17 +132,6 @@ Options:
     --verbose};
 }
 
-HelpMessage() if scalar @ARGV == 0;
-
-path($archive_dir)->mkpath; # Create archive directory.
-foreach my $arg ( @ARGV ) {
-    if ( $dispatch{ $arg } ) {
-        say "--------------------------------";
-        $dispatch{ $arg }->();
-    } else {
-        die "leo: no such option\n";
-    }
-}
 
 sub tar_create { run3 ["/bin/tar", "cf", @_]; }
 sub tar_list { run3 ["/bin/tar", "tvf", @_]; }
