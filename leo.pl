@@ -14,30 +14,61 @@ GetOptions(
     qw{ verbose encrypt sign }
 ) or die "Error in command line arguments\n";
 
+my $gpg_fingerprint = "D9AE4AEEE1F1B3598E81D9DFB67D55D482A799FD";
+my $archive_dir = "/tmp/archive";
+my $ymd = ymd(); # YYYY-MM-DD.
 
-# There will be multiple dispatch tables, to avoid confusion the main
-# one is named %dispatch & others will be named like %archive_dispatch
-# & so on.
+# Dispatch table.
 my %dispatch = (
-    "archive" => \&archive,
+    "documents" => sub {
+        tar_create("$archive_dir/documents_$ymd.tar",
+                   "-C", "$ENV{HOME}/documents", ".");
+    },
+    "journal" => sub {
+        tar_create("$archive_dir/journal_$ymd.tar",
+                   "-C", "$ENV{HOME}/documents",
+                   "andinus.org.gpg", "archive.org.gpg");
+    },
+    "ssh" => sub {
+        tar_create("$archive_dir/ssh_$ymd.tar",
+                   "-C", "$ENV{HOME}/.ssh", ".");
+    },
+    "pass" => sub {
+        tar_create("$archive_dir/pass_$ymd.tar",
+                   "-C", "$ENV{HOME}/.password-store", ".");
+    },
 );
 
-if ( $ARGV[0]
-         and $dispatch{ $ARGV[0] } ) {
+if ( $ARGV[0] and $dispatch{ $ARGV[0] } ) {
+    path($archive_dir)->mkpath; # Create archive directory.
     $dispatch{ $ARGV[0] }->();
 } elsif ( scalar @ARGV == 0 ) {
     HelpMessage();
 } else {
-    say "leo: no such option";
+    die say "leo: no such option\n";
 }
 
 sub HelpMessage {
-    say qq{Usage:
-    archive
-        Create an archive.};
+    say qq{Archive files to $archive_dir.
+
+Usage:
+    documents
+        Archive $ENV{HOME}/documents
+    journal
+        Archive $ENV{HOME}/documents/andinus.org.gpg,
+                $ENV{HOME}/documents/archive.org.gpg
+    ssh
+        Archive $ENV{HOME}/.ssh
+    pass
+        Archive $ENV{HOME}/.password-store
+
+Options:
+    --encrypt
+        Encrypt files with $gpg_fingerprint
+    --sign
+        Sign files with $gpg_fingerprint};
 }
 
-sub rsync { run3 ["openrsync", @_]; }
 
 # User must pass $tar_file first & `-C' optionally.
 sub tar_create {
@@ -73,11 +104,7 @@ sub tar_create {
 }
 sub tar_list { run3 ["/bin/tar", "tvf", @_]; }
 
-# Creating tars of files.
-sub archive {
-    my $gpg_fingerprint = "D9AE4AEEE1F1B3598E81D9DFB67D55D482A799FD";
-    my $archive_dir = "/tmp/archive";
-
+sub ymd {
     my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) =
         localtime(time);
 
@@ -88,52 +115,9 @@ sub archive {
     my @months = qw( 01 02 03 04 05 06 07 08 09 10 11 12 );
     my $month = $months[$mon];
 
-    my $ymd = "$year-$month-$mday";
+    return "$year-$month-$mday";
+}
 
-    my %archive_dispatch = (
-        "documents" => sub {
-            tar_create("$archive_dir/documents_$ymd.tar",
-                       "-C", "$ENV{HOME}/documents", ".");
-        },
-        "journal" => sub {
-            tar_create("$archive_dir/journal_$ymd.tar",
-                       "-C", "$ENV{HOME}/documents",
-                       "andinus.org.gpg", "archive.org.gpg");
-        },
-        "ssh" => sub {
-            tar_create("$archive_dir/ssh_$ymd.tar",
-                       "-C", "$ENV{HOME}/.ssh", ".");
-        },
-        "pass" => sub {
-            tar_create("$archive_dir/pass_$ymd.tar",
-                       "-C", "$ENV{HOME}/.password-store", ".");
-        },
-    );
-
-    shift @ARGV; # Drop `archive' from @ARGV.
-    if ( $ARGV[0] and $archive_dispatch{ $ARGV[0] } ) {
-        path($archive_dir)->mkpath; # Create archive directory.
-        $archive_dispatch{ $ARGV[0] }->();
-    } elsif ( scalar @ARGV == 0 ) {
-        say qq{Archive files to $archive_dir.
-
-Usage:
-    documents
-        Archive $ENV{HOME}/documents
-    journal
-        Archive $ENV{HOME}/documents/andinus.org.gpg,
-                $ENV{HOME}/documents/archive.org.gpg
-    ssh
-        Archive $ENV{HOME}/.ssh
-    pass
-        Archive $ENV{HOME}/.password-store
-
-Options:
-    --encrypt
-        Encrypt files with $gpg_fingerprint
-    --sign
-        Sign files with $gpg_fingerprint};
-    } else {
-        say "leo/archive: no such option";
-    }
+# Creating tars of files.
+sub archive {
 }
