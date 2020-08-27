@@ -9,16 +9,14 @@ Table of Contents
 ─────────────────
 
 1 Documentation
-.. 1.1 archive
-.. 1.2 help
-.. 1.3 removed
-..... 1.3.1 sync functions
+.. 1.1 help
+2 History
 
 
-Leo is a program to run my personal scripts. You might not find them
-useful, these were previously shell scripts that I rewrote in Perl.
+Leo is my archival program. It creates tar(1) files from a pre-defined
+list.
 
-• Website: [https://andinus.nand.sh/leo]
+• Web-site: [https://andinus.nand.sh/leo]
 • Source: [https://git.tilde.institute/andinus/leo]
 • Source (mirror): [https://github.com/andinus/leo]
 
@@ -26,21 +24,15 @@ useful, these were previously shell scripts that I rewrote in Perl.
 1 Documentation
 ═══════════════
 
-  There is a main dispatch table (`%dispatch') which has all the
-  functions.
-
-
-1.1 archive
-───────────
-
-  `archive' creates tar(1) files from a pre-defined list.
-  `%archive_dispatch' contains that list.
+  `%dispatch' has the pre-defined list. Learn the list directly from
+  `leo.pl', it's self-explanatory. Or check the sub `HelpMessage', it
+  explains what each command does.
 
   For example, `documents' will archive `$ENV{HOME}/documents' to
   `/tmp/archive/documents_$ymd.tar' where `$ymd' is current date in
   `YYYY-MM-DD' format.
   ┌────
-  │ my %archive_dispatch = (
+  │ my %dispatch = (
   │     "documents" => sub {
   │         tar_create("/tmp/archive/documents_$ymd.tar",
   │                    "-C", "$ENV{HOME}/documents", ".");
@@ -52,27 +44,27 @@ useful, these were previously shell scripts that I rewrote in Perl.
   I use this to quickly archive some of my files & copy them to another
   computer as a backup.
 
-  There is no encryption or compression but it can be added directly to
-  `tar_create' function. I plan to add some encryption later. Currently
-  I store them locally (offline) so it's not required.
 
-
-1.2 help
+1.1 help
 ────────
 
-  Running just `leo' will print help. There is help message for
-  functions too, run `leo <function>' to print their help message. For
-  example, `leo archive' will print `archive''s help message.
+  Running just `leo' will print help.
 
 
-1.3 removed
-───────────
+2 History
+═════════
 
-  This contains the list of functions that were removed.
+  This was Leo's initial description:
 
+        Leo is a program to run my personal scripts. You might not
+        find them useful, these were previously shell scripts that
+        I rewrote in Perl.
 
-1.3.1 sync functions
-╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌
+  I had created a sync function initially & was going to expand it. Then
+  I decided to remove those sync functions because it was too complex, I
+  replaced then with simple `sh' scripts.
 
-  There were sync functions, they synced some of my files to remote
-  servers. I replaced it with simple `sh' scripts instead.
+  I added a simple `archive' function later & decided to turn Leo into
+  that function. So, it's not a meta-program anymore. I was thinking of
+  creating something that does all the things for me but that'll be too
+  complex.
