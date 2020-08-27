@@ -9,12 +9,14 @@ Table of Contents
 ─────────────────
 
 1 Documentation
-.. 1.1 help
+.. 1.1 encrypt/sign
+.. 1.2 delete
+.. 1.3 help
 2 History
 
 
 Leo is my archival program. It creates tar(1) files from a pre-defined
-list.
+list. It can encrypt/sign files with gpg2(1).
 
 • Web-site: [https://andinus.nand.sh/leo]
 • Source: [https://git.tilde.institute/andinus/leo]
@@ -45,7 +47,26 @@ list.
   computer as a backup.
 
 
-1.1 help
+1.1 encrypt/sign
+────────────────
+
+  `encrypt_sign' handles `gpg2' related functions. It passes `--yes' by
+  default.
+
+  *Note*: `gpg2' might compress the archives depending on your config.
+   Default is to enable compression, if you don't want this then add `-z
+   0' to `@options'. `-z' specifies the compression level & 0 means no
+   compression.
+
+
+1.2 delete
+──────────
+
+  Removes the archive file after running gpg2(1). This means that either
+  `encrypt' or `sign' option must be passed.
+
+
+1.3 help
 ────────
 
   Running just `leo' will print help.
