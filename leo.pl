@@ -72,23 +72,6 @@ sub archive {
     print "\n" and tar_list($tar_file) if $options{verbose};
 }
 
-sub tar_create { run3 ["/bin/tar" , "cf", @_]; }
-sub tar_list { run3 ["/bin/tar", "tvf", @_]; }
-
-sub ymd {
-    my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) =
-        localtime(time);
-
-    $year += 1900; # $year contains the number of years since 1900.
-
-    # $mon the month in the range 0..11 , with 0 indicating January
-    # and 11 indicating December.
-    my @months = qw( 01 02 03 04 05 06 07 08 09 10 11 12 );
-    my $month = $months[$mon];
-
-    return "$year-$month-$mday";
-}
-
 sub HelpMessage {
     say qq{Archive files to $archive_dir.
 
@@ -117,4 +100,21 @@ if ( $ARGV[0] and $dispatch{ $ARGV[0] } ) {
     HelpMessage();
 } else {
     die say "leo: no such option\n";
+}
+
+sub tar_create { run3 ["/bin/tar" , "cf", @_]; }
+sub tar_list { run3 ["/bin/tar", "tvf", @_]; }
+
+sub ymd {
+    my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) =
+        localtime(time);
+
+    $year += 1900; # $year contains the number of years since 1900.
+
+    # $mon the month in the range 0..11 , with 0 indicating January
+    # and 11 indicating December.
+    my @months = qw( 01 02 03 04 05 06 07 08 09 10 11 12 );
+    my $month = $months[$mon];
+
+    return "$year-$month-$mday";
 }
