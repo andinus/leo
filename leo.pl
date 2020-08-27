@@ -72,15 +72,31 @@ sub tar_list { run3 ["/bin/tar", "tvf", @_]; }
 
 # Creating tars of files.
 sub archive {
+    my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) =
+        localtime(time);
+
+    $year += 1900; # $year contains the number of years since 1900.
+
+    # $mon the month in the range 0..11 , with 0 indicating January
+    # and 11 indicating December.
+    my @months = qw( 01 02 03 04 05 06 07 08 09 10 11 12 );
+    my $month = $months[$mon];
+
+    my $ymd = "$year-$month-$mday";
+
     my %archive_dispatch = (
         "documents" => sub {
-            tar_create("/tmp/archive/documents.tar",
+            tar_create("/tmp/archive/documents_$ymd.tar",
                        "-C", "$ENV{HOME}/documents", ".");
         },
         "journal" => sub {
-            tar_create("/tmp/archive/journal.tar",
+            tar_create("/tmp/archive/journal_$ymd.tar",
                        "-C", "$ENV{HOME}/documents",
                        "andinus.org.gpg", "archive.org.gpg");
+        },
+        "ssh" => sub {
+            tar_create("/tmp/archive/ssh_$ymd.tar",
+                       "-C", "$ENV{HOME}/.ssh", ".");
         },
     );
 
@@ -103,6 +119,8 @@ Usage:
         Archive $ENV{HOME}/documents
     journal
         Archive $ENV{HOME}/documents/andinus.org.gpg,
-                $ENV{HOME}/documents/archive.org.gpg};
+                $ENV{HOME}/documents/archive.org.gpg
+    ssh
+        Archive $ENV{HOME}/.ssh};
     }
 }
