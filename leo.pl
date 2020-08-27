@@ -61,7 +61,7 @@ sub archive {
     warn "$tar_file exists, might overwrite.\n" if -e $tar_file;
     print "\n";
 
-    tar_create($tar_file, @_)
+    tar_create($tar_file, @_);
 
     $? # tar returns 1 on errors.
         ? die "Archive creation failed :: $?\n"
