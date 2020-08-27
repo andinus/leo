@@ -34,19 +34,33 @@ my %dispatch = (
     },
 );
 
+# These are the directories to be added to dispatch table but have
+# path names different from their profile names.
+my %directories = (
+    ssh => "$ENV{HOME}/.ssh",
+    pass => "$ENV{HOME}/.password-store",
+    mozilla => "$ENV{HOME}/.mozilla",
+    config => "$ENV{HOME}/.config",
+    emacs => "$ENV{HOME}/.emacs.d",
+    elfeed => "$ENV{HOME}/.elfeed",
+);
+
+foreach my $dir (sort keys %directories) {
+    $dispatch{$dir} = sub {
+        archive("$archive_dir/${dir}_${ymd}.tar",
+                "-C", "$directories{$dir}", ".");
+    };
+}
+
 # This adds the directories that have same path relative to $ENV{HOME}
 # as profile name.
-foreach my $profile (qw( emails music projects documents .ssh
-                         .password-store)) {
+foreach my $profile (qw( emails music projects documents videos pictures
+                         downloads )) {
     $dispatch{$profile} = sub {
         archive("$archive_dir/${profile}_$ymd.tar",
                 "-C", "$ENV{HOME}/$profile", ".");
     };
 }
-
-# Aliases for inconvenient paths.
-$dispatch{ssh} = $dispatch{".ssh"};
-$dispatch{pass} = $dispatch{".password-store"};
 
 # User must pass $tar_file first & `-C' optionally.
 sub archive {
