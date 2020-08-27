@@ -19,8 +19,8 @@ $options{sign} = $ENV{LEO_SIGN};
 $options{delete} = $ENV{LEO_DELETE};
 
 my $gpg_fingerprint = "D9AE4AEEE1F1B3598E81D9DFB67D55D482A799FD";
-my $archive_dir = "/tmp/archive";
 my $ymd = ymd(); # YYYY-MM-DD.
+my $archive_dir = "/tmp/archive/$ymd";
 
 path($archive_dir)->mkpath; # Create archive directory.
 my $prof;
@@ -56,7 +56,7 @@ foreach my $arg ( @ARGV ) {
             if $prof eq "journal" and $options{encrypt};
 
         # Deref the array here because we want flattened list.
-        archive("$archive_dir/${arg}_$ymd.tar", $profile{$arg}->@*);
+        archive("$archive_dir/${arg}.tar", $profile{$arg}->@*);
 
         $options{encrypt} = $tmp if $prof eq "journal";
     } else {
