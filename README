@@ -9,7 +9,7 @@ Table of Contents
 ─────────────────
 
 1 Documentation
-.. 1.1 Dispatch table
+.. 1.1 Profile
 .. 1.2 Options
 ..... 1.2.1 encrypt/sign
 ..... 1.2.2 delete
@@ -33,51 +33,19 @@ list. It can encrypt/sign files with gpg2(1).
   computer as a backup.
 
 
-1.1 Dispatch table
-──────────────────
+1.1 Profile
+───────────
 
-  `%dispatch' has the pre-defined list. Learn the list directly from
-  `leo.pl', it's self-explanatory. Or check the sub `HelpMessage', it
-  explains what each command does.
+  Profile is a simple hash table which contains the list of profiles.
+  The profiles are mapped to a list of file paths relative to `$HOME'
+  which are to be archived.
 
-  For example, `documents' will archive `$ENV{HOME}/documents' to
-  `/tmp/archive/documents_$ymd.tar' where `$ymd' is current date in
-  `YYYY-MM-DD' format.
-  ┌────
-  │ my %dispatch = (
-  │     journal => sub {
-  │         archive("$archive_dir/journal_$ymd.tar",
-  │                 "-C", "$ENV{HOME}/documents",
-  │                 "andinus.org.gpg", "archive.org.gpg");
-  │     },
-  │     ...
-  │ );
-  └────
+  Complex profiles are hard coded & simple ones are generated. Complex
+  profiles include profiles that have multiple files or are a mix or
+  files & directories. Simple profiles are profiles with just single
+  directory.
 
-  Currently I generate the dispatch table with a function & only special
-  profiles are added manually like above. `journal' is a special profile
-  because I don't want encryption on it.
-
-  Other profiles are added by this function:
-  ┌────
-  │ # This adds the directories that have same path relative to $ENV{HOME}
-  │ # as profile name.
-  │ foreach my $profile (qw( emails music projects documents .ssh
-  │                          .password-store)) {
-  │     $dispatch{$profile} = sub {
-  │         archive("$archive_dir/${profile}_$ymd.tar",
-  │                 "-C", "$ENV{HOME}/$profile", ".");
-  │     };
-  │ }
-  └────
-
-  I alias paths like `.ssh' to make it convenient to type:
-
-  ┌────
-  │ # Aliases for inconvenient paths.
-  │ $dispatch{ssh} = $dispatch{".ssh"};
-  │ $dispatch{pass} = $dispatch{".password-store"};
-  └────
+  You can run `help' to see all the profiles along with the paths.
 
 
 1.2 Options

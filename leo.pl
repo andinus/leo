@@ -11,7 +11,7 @@ use Getopt::Long qw/ GetOptions /;
 my %options = ();
 GetOptions(
     \%options,
-    qw{ verbose encrypt sign delete }
+    qw{ verbose encrypt sign delete help }
 ) or die "Error in command line arguments\n";
 
 $options{encrypt} = $ENV{LEO_ENCRYPT};
@@ -45,7 +45,7 @@ $profile{ssh} = $profile{".ssh"};
 $profile{pass} = $profile{".password-store"};
 $profile{mozilla} = $profile{".mozilla"};
 
-HelpMessage() and exit 0 if scalar @ARGV == 0;
+HelpMessage() and exit 0 if scalar @ARGV == 0 or $options{help};
 foreach my $arg ( @ARGV ) {
     $prof = $arg; # Set $prof.
     if ( $profile{ $arg } ) {
@@ -129,7 +129,8 @@ Options:
         Sign files with $gpg_fingerprint
     --delete
         Delete the archive after running gpg2
-    --verbose};
+    --verbose
+    --help};
 }
 
 
