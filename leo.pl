@@ -8,15 +8,17 @@ use IPC::Run3;
 use Path::Tiny;
 use Getopt::Long qw/ GetOptions /;
 
-my %options = ();
+my %options = (
+    encrypt => $ENV{LEO_ENCRYPT},
+    sign => $ENV{LEO_SIGN},
+    delete => $ENV{LEO_DELETE},
+);
+
 GetOptions(
     \%options,
     qw{ verbose encrypt sign delete help }
 ) or die "Error in command line arguments\n";
 
-$options{encrypt} = $ENV{LEO_ENCRYPT};
-$options{sign} = $ENV{LEO_SIGN};
-$options{delete} = $ENV{LEO_DELETE};
 
 my $gpg_fingerprint = "D9AE4AEEE1F1B3598E81D9DFB67D55D482A799FD";
 my $ymd = ymd(); # YYYY-MM-DD.
