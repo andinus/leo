@@ -8,15 +8,16 @@
 Table of Contents
 ─────────────────
 
-1 Documentation
-.. 1.1 Profile
-.. 1.2 Options
-..... 1.2.1 encrypt/sign
-..... 1.2.2 delete
-..... 1.2.3 help
-.. 1.3 Configuration
-2 Example
-3 History
+1 Demo
+2 Documentation
+.. 2.1 Profile
+.. 2.2 Options
+..... 2.2.1 encrypt/sign
+..... 2.2.2 delete
+..... 2.2.3 help
+.. 2.3 Configuration
+3 Example
+4 History
 
 
 Leo is a simple backup program. It creates tar(1) files from a
@@ -27,29 +28,39 @@ pre-defined list. It can encrypt/sign files with gpg2(1).
 • Source (mirror): [https://github.com/andinus/leo]
 
 
-1 Documentation
+1 Demo
+══════
+
+  It's very easy to setup `leo', I made a demo video to show this. I
+  already have Perl environment setup for this.
+
+  • Leo 2020-08-31: [https://asciinema.org/a/F97hVfgXDcd9g5IlST1t27ps3]
+
+  You can also download the [cast file] directly & play it with
+  `asciinema'.
+
+
+[cast file] https://andinus.nand.sh/static/leo/2020-08-31_leo-demo.cast
+
+
+2 Documentation
 ═══════════════
 
   I use this to quickly backup some of my files. It works on profiles,
   profiles are simple lists of files which get backed up.
 
 
-1.1 Profile
+2.1 Profile
 ───────────
 
-  Profile is a simple hash table which contains the list of profiles.
-  The profiles are mapped to a list of file paths relative to `$HOME'
-  which are to be backed up.
-
-  Complex profiles are hard-coded & simple ones are generated. Complex
-  profiles include profiles that have multiple files or are a mix or
-  files & directories. Simple profiles are profiles with just single
-  directory.
+  Profile is a simple hash table (`%profile') which contains the list of
+  profiles. The profiles are mapped to a list of file paths relative to
+  `$HOME' which are to be backed up.
 
   You can run `help' to see all the profiles along with the paths.
 
 
-1.2 Options
+2.2 Options
 ───────────
 
   Some options can also be passed through environment variables. That
@@ -63,7 +74,7 @@ pre-defined list. It can encrypt/sign files with gpg2(1).
   ━━━━━━━━━━━━━━━━━━━━━━
 
 
-1.2.1 encrypt/sign
+2.2.1 encrypt/sign
 ╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌
 
   `encrypt_sign' handles `gpg2' related functions. It passes `--yes' by
@@ -79,20 +90,20 @@ pre-defined list. It can encrypt/sign files with gpg2(1).
    `leo --encrypt journal pass' will still encrypt pass.
 
 
-1.2.2 delete
+2.2.2 delete
 ╌╌╌╌╌╌╌╌╌╌╌╌
 
   Removes the tar file after running gpg2(1). This means that either
   `encrypt' or `sign' option must be passed.
 
 
-1.2.3 help
+2.2.3 help
 ╌╌╌╌╌╌╌╌╌╌
 
   Running just `leo' will print help.
 
 
-1.3 Configuration
+2.3 Configuration
 ─────────────────
 
   There is an example config file under `share/config.pl', move it to
@@ -113,7 +124,7 @@ pre-defined list. It can encrypt/sign files with gpg2(1).
   again after editing.
 
 
-2 Example
+3 Example
 ═════════
 
   ┌────
@@ -128,7 +139,7 @@ pre-defined list. It can encrypt/sign files with gpg2(1).
   └────
 
 
-3 History
+4 History
 ═════════
 
   This was Leo's initial description:
