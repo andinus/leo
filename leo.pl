@@ -19,34 +19,21 @@ GetOptions(
     qw{ verbose encrypt sign delete help }
 ) or die "Error in command line arguments\n";
 
-
-my $gpg_fingerprint = "D9AE4AEEE1F1B3598E81D9DFB67D55D482A799FD";
 my $ymd = ymd(); # YYYY-MM-DD.
 my $backup_dir = "/tmp/backup/$ymd";
 
 path($backup_dir)->mkpath; # Create backup directory.
 my $prof;
 
-my %profile = (
-    journal => [qw( documents/andinus.org.gpg
-                    documents/archive.org.gpg )],
-    emacs   => [qw( .emacs.d .elfeed .org-timestamps )],
-    config  => [qw( .config .kshrc .kshrc.d .tmux.conf .xsession .remind
-                    .screenlayout .mg .mbsyncrc .fehbg .profile .plan
-                    .authinfo.gpg .Xresources )],
-);
+# Config file for leo.
+my $config_file = $ENV{XDG_CONFIG_HOME} || "$ENV{HOME}/.config";
+$config_file .= "/leo.pl";
 
-# Add more directories to %profile.
-foreach my $tmp_prof (qw( emails music projects documents videos .ssh
-                          downloads pictures .password-store .mozilla
-                          fortunes )) {
-    $profile{$tmp_prof} = [$tmp_prof];
-}
+require "$config_file";
 
-# Aliases.
-$profile{ssh} = $profile{".ssh"};
-$profile{pass} = $profile{".password-store"};
-$profile{mozilla} = $profile{".mozilla"};
+my %profile = get_profile();
+my $gpg_fingerprint = get_gpg_fingerprint();
+my $gpg_bin = get_gpg_bin();
 
 HelpMessage() and exit 0 if scalar @ARGV == 0 or $options{help};
 foreach my $arg ( @ARGV ) {
@@ -100,7 +87,7 @@ sub encrypt_sign() {
     say "\nEncrypt/Sign: $file";
     warn "[WARN] $file.gpg exists, might overwrite.\n" if -e "$file.gpg";
 
-    run3 ["gpg2", "--yes", "-o", "$file.gpg", @options, $file];
+    run3 [$gpg_bin, "--yes", "-o", "$file.gpg", @options, $file];
 
     $? # We assume non-zero is an error.
         ? die "Encrypt/Sign failed :: $?\n"
@@ -131,7 +118,7 @@ Options:
     --sign
         Sign files with $gpg_fingerprint
     --delete
-        Delete the tar file after running gpg2
+        Delete the tar file after running $gpg_bin
     --verbose
     --help};
 }
