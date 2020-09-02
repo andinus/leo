@@ -49,8 +49,13 @@ foreach my $arg ( @ARGV ) {
         backup("$backup_dir/${arg}.tar", $profile{$arg}->@*);
 
         $options{encrypt} = $tmp if $prof eq "journal";
+    } elsif ( -e $ENV{HOME}/$arg ) {
+        # If the file/directory exist then create a new profile & run
+        # backup.
+        say "++++++++********++++++++";
+        backup("$backup_dir/${arg}.tar", $arg);
     } else {
-        warn "[WARN] leo: no such option :: $arg \n";
+        warn "[WARN] leo: no such profile :: `$arg' \n";
     }
 }
 
