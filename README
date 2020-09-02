@@ -34,6 +34,9 @@ pre-defined list. It can encrypt/sign files with gpg2(1).
   It's very easy to setup `leo', I made a demo video to show this. I
   already have Perl environment setup for this.
 
+  *Note*: It's even more easy now, you don't have to create profiles
+  anymore.
+
   • Leo 2020-08-31: [https://asciinema.org/a/F97hVfgXDcd9g5IlST1t27ps3]
 
   You can also download the [cast file] directly & play it with
@@ -59,6 +62,11 @@ pre-defined list. It can encrypt/sign files with gpg2(1).
 
   You can run `help' to see all the profiles along with the paths.
 
+  Creating profiles is not required anymore, you can pass it
+  file/directory name. Not all kinds of path can be passed. For example,
+  `leo documents/test.txt' is not okay but `cd documents' & then `leo
+  test.txt' is okay.
+
 
 2.2 Options
 ───────────
@@ -67,11 +75,11 @@ pre-defined list. It can encrypt/sign files with gpg2(1).
   allows for configuration in shell rc file & the user can run leo
   directly without looking at options.
 
-  ━━━━━━━━━━━━━━━━━━━━━━
-   encrypt  LEO_ENCRYPT
-   sign     LEO_SIGN
-   delete   LEO_DELETE
-  ━━━━━━━━━━━━━━━━━━━━━━
+  ━━━━━━━━━━━━━━━━━━━━━━━━
+   encrypt  `LEO_ENCRYPT'
+   sign     `LEO_SIGN'
+   delete   `LEO_DELETE'
+  ━━━━━━━━━━━━━━━━━━━━━━━━
 
 
 2.2.1 encrypt/sign
@@ -136,6 +144,9 @@ pre-defined list. It can encrypt/sign files with gpg2(1).
   │ # your shell rc & then just run ``leo documents journal ssh pass'' to
   │ # do the same.
   │ LEO_ENCRYPT=1 LEO_SIGN=1 LEO_DELETE=1 leo documents journal ssh pass
+  │
+  │ # Backup this specific file.
+  │ cd $HOME/documents; leo --encrypt --sign andinus.org.gpg
   └────
 
 
