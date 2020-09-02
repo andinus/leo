@@ -49,11 +49,13 @@ foreach my $arg ( @ARGV ) {
         backup("$backup_dir/${arg}.tar", $profile{$arg}->@*);
 
         $options{encrypt} = $tmp if $prof eq "journal";
-    } elsif ( -e $ENV{HOME}/$arg ) {
+    } elsif ( -e $arg ) {
         # If the file/directory exist then create a new profile & run
         # backup.
         say "++++++++********++++++++";
-        backup("$backup_dir/${arg}.tar", $arg);
+        backup("$backup_dir/${arg}.tar",
+               # backup() is expecting path relative to $ENV{HOME}.
+               path($arg)->relative($ENV{HOME}));
     } else {
         warn "[WARN] leo: no such profile :: `$arg' \n";
     }
