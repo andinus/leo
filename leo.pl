@@ -20,7 +20,7 @@ GetOptions(
 ) or die "Error in command line arguments\n";
 
 my $ymd = ymd(); # YYYY-MM-DD.
-my $backup_dir = "/tmp/backup/$ymd";
+my $backup_dir = "/tmp/backups/$ymd";
 
 path($backup_dir)->mkpath; # Create backup directory.
 my $prof;
