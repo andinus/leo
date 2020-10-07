@@ -19,17 +19,19 @@ GetOptions(
     qw{ verbose encrypt sign delete help }
 ) or die "Error in command line arguments\n";
 
-my $ymd = ymd(); # YYYY-MM-DD.
-my $backup_dir = "/tmp/backups/$ymd";
-
-path($backup_dir)->mkpath; # Create backup directory.
-my $prof;
-
 # Config file for leo.
 my $config_file = $ENV{XDG_CONFIG_HOME} || "$ENV{HOME}/.config";
 $config_file .= "/leo.pl";
 
 require "$config_file";
+
+my $ymd = ymd(); # YYYY-MM-DD.
+my $backup_dir = get_backup_dir() || "/tmp/backups";
+$backup_dir .= "/$ymd";
+
+path($backup_dir)->mkpath; # Create backup directory.
+my $prof;
+
 
 my %profile = get_profile();
 my $gpg_fingerprint = get_gpg_fingerprint();
@@ -145,5 +147,6 @@ sub ymd {
     my @months = qw( 01 02 03 04 05 06 07 08 09 10 11 12 );
     my $month = $months[$mon];
 
+    $mday = sprintf "%02d", $mday;
     return "$year-$month-$mday";
 }

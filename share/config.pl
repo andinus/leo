@@ -31,5 +31,6 @@ $profile{mozilla} = $profile{".mozilla"};
 sub get_gpg_fingerprint { return $gpg_fingerprint; }
 sub get_profile { return %profile; }
 sub get_gpg_bin { return $gpg_bin; }
+sub get_backup_dir { return "/tmp/backups" }
 
 1;
