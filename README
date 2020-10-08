@@ -8,42 +8,44 @@
 Table of Contents
 ─────────────────
 
-1 Demo
-2 Documentation
-.. 2.1 Profile
-.. 2.2 Options
-..... 2.2.1 encrypt/sign
-..... 2.2.2 delete
-..... 2.2.3 help
-.. 2.3 Configuration
-3 Example
-4 History
+1. Installation
+2. Documentation
+.. 1. Profile
+.. 2. Options
+..... 1. encrypt/sign
+..... 2. delete
+..... 3. help
+3. Example
+4. Demo
+5. History
 
 
 Leo is a simple backup program. It creates tar(1) files from a
 pre-defined list. It can encrypt/sign files with gpg2(1).
 
-• Web-site: [https://andinus.nand.sh/leo]
-• Source: [https://git.tilde.institute/andinus/leo]
-• Source (mirror): [https://github.com/andinus/leo]
+• Web-site: <https://andinus.nand.sh/leo>
+• Source: <https://git.tilde.institute/andinus/leo>
+• Source (mirror): <https://github.com/andinus/leo>
 
 
-1 Demo
-══════
+1 Installation
+══════════════
 
-  It's very easy to setup `leo', I made a demo video to show this. I
-  already have Perl environment setup for this.
-
-  *Note*: It's even more easy now, you don't have to create profiles
-  anymore.
-
-  • Leo 2020-08-31: [https://asciinema.org/a/F97hVfgXDcd9g5IlST1t27ps3]
-
-  You can also download the [cast file] directly & play it with
-  `asciinema'.
-
-
-[cast file] https://andinus.nand.sh/static/leo/2020-08-31_leo-demo.cast
+  ┌────
+  │ # Install all the dependencies. (OpenBSD)
+  │ doas pkg_add p5-IPC-Run3 p5-Config-Tiny p5-Path-Tiny
+  │
+  │ # Clone the project.
+  │ git clone https://git.tilde.institute/andinus/leo && \
+  │     cd leo
+  │
+  │ # Copy the config.
+  │ cp share/leo.conf $HOME/.config/leo.conf
+  │
+  │ # Copy the script & make it executable.
+  │ cp leo.pl $HOME/bin/leo && \
+  │     chmod +x $HOME/bin/leo
+  └────
 
 
 2 Documentation
@@ -62,10 +64,8 @@ pre-defined list. It can encrypt/sign files with gpg2(1).
 
   You can run `help' to see all the profiles along with the paths.
 
-  Creating profiles is not required anymore, you can pass it
-  file/directory name. Not all kinds of path can be passed. For example,
-  `leo documents/test.txt' is not okay but `cd documents' & then `leo
-  test.txt' is okay.
+  Creating profiles is not required anymore, you can pass it any file in
+  current directory & it'll create a temporary profile.
 
 
 2.2 Options
@@ -93,10 +93,6 @@ pre-defined list. It can encrypt/sign files with gpg2(1).
    0' to `@options'. `-z' specifies the compression level & 0 means no
    compression.
 
-  *Note*: My journal is encrypted so to prevent re-encryption `encrypt'
-   option is not passed to gpg2. This only affects journal profile. So
-   `leo --encrypt journal pass' will still encrypt pass.
-
 
 2.2.2 delete
 ╌╌╌╌╌╌╌╌╌╌╌╌
@@ -109,27 +105,6 @@ pre-defined list. It can encrypt/sign files with gpg2(1).
 ╌╌╌╌╌╌╌╌╌╌
 
   Running just `leo' will print help.
-
-
-2.3 Configuration
-─────────────────
-
-  There is an example config file under `share/config.pl', move it to
-  config directory & rename to `leo.pl'.
-
-  ┌────
-  │ cp share/config.pl $HOME/.config/leo.pl # Copy the config.
-  │ chmod -w $HOME/.config/leo.pl # Make it read-only.
-  └────
-
-  *Warning*: Leo will evaluate the configuration file, which means an
-  attacker can use it to run malicious code.
-
-  *Note*: They could always add malicious code to `.profile' & do harm.
-  Just thought I should put the warning.
-
-  To edit the config run `chmod +w' on it but please make it read-only
-  again after editing.
 
 
 3 Example
@@ -150,7 +125,26 @@ pre-defined list. It can encrypt/sign files with gpg2(1).
   └────
 
 
-4 History
+4 Demo
+══════
+
+  It's very easy to setup `leo', I made a demo video to show this. I
+  already have Perl environment setup for this.
+
+  *Note*: It's even more easy now, you don't have to create profiles
+  anymore.
+
+  • Leo 2020-08-31: <https://asciinema.org/a/F97hVfgXDcd9g5IlST1t27ps3>
+
+  You can also download the [cast file] directly & play it with
+  `asciinema'.
+
+
+[cast file]
+<https://andinus.nand.sh/static/leo/2020-08-31_leo-demo.cast>
+
+
+5 History
 ═════════
 
   This was Leo's initial description:
@@ -171,3 +165,5 @@ pre-defined list. It can encrypt/sign files with gpg2(1).
   Later on the same day I removed dispatch table & switched to using
   simple hash of lists to store backup paths mapped to profiles. And
   also changed the word "archive" to "backup" everywhere.
+
+  I added a simple INI based config file before 0.1.0 release.
