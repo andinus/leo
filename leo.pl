@@ -6,7 +6,10 @@ use feature 'say';
 
 use IPC::Run3;
 use Path::Tiny;
+use Config::Tiny;
 use Getopt::Long qw/ GetOptions /;
+
+# Options.
 
 my %options = (
     encrypt => $ENV{LEO_ENCRYPT},
@@ -19,66 +22,76 @@ GetOptions(
     qw{ verbose encrypt sign delete help }
 ) or die "Error in command line arguments\n";
 
-# Config file for leo.
-my $config_file = $ENV{XDG_CONFIG_HOME} || "$ENV{HOME}/.config";
-$config_file .= "/leo.pl";
+# Configuration.
 
-require "$config_file";
+my $config_file = $ENV{XDG_CONFIG_HOME} || "$ENV{HOME}/.config";
+$config_file .= "/leo.conf";
+
+my $config = Config::Tiny->new;
+$config = Config::Tiny->read( $config_file )
+    or die "Cannot read config file: `$config_file'\n";
+
+# Reading config file.
 
 my $ymd = ymd(); # YYYY-MM-DD.
-my $backup_dir = get_backup_dir() || "/tmp/backups";
+my $backup_dir = $config->{_}->{backup_dir} || "/tmp/backups";
 $backup_dir .= "/$ymd";
 
 path($backup_dir)->mkpath; # Create backup directory.
-my $prof;
 
+my $gpg_fingerprint = $config->{_}->{gpg_fingerprint};
+my $gpg_bin = $config->{_}->{gpg_bin};
 
-my %profile = get_profile();
-my $gpg_fingerprint = get_gpg_fingerprint();
-my $gpg_bin = get_gpg_bin();
+my %profile;
 
+foreach my $section (sort keys $config->%*) {
+    next if $section eq "_";
+    foreach my $key (sort keys $config->{$section}->%*) {
+        push @{ $profile{$section} }, $key;
+    }
+}
+
+# Print help.
 HelpMessage() and exit 0 if scalar @ARGV == 0 or $options{help};
+
+# Parsing the arguments.
 foreach my $arg ( @ARGV ) {
-    $prof = $arg; # Set $prof.
     if ( $profile{ $arg } ) {
         say "++++++++********++++++++";
 
-        # No encryption for journal profile.
-        my $tmp = $options{encrypt} and undef $options{encrypt}
-            if $prof eq "journal" and $options{encrypt};
-
         # Deref the array here because we want flattened list.
         backup("$backup_dir/${arg}.tar", $profile{$arg}->@*);
-
-        $options{encrypt} = $tmp if $prof eq "journal";
     } elsif ( -e $arg ) {
         # If the file/directory exist then create a new profile & run
         # backup.
         say "++++++++********++++++++";
-        backup("$backup_dir/${arg}.tar",
-               # backup() is expecting path relative to $ENV{HOME}.
-               path($arg)->relative($ENV{HOME}));
+        warn "[WARN] leo: creating temporary profile: `$arg'\n";
+        backup("$backup_dir/${arg}.tar", $arg);
     } else {
         warn "[WARN] leo: no such profile :: `$arg' \n";
     }
 }
 
-# User must pass $tar_file first.
 sub backup {
     my $tar_file = shift @_;
-    my @backup_paths = @_;
+
+    # Make @backup_paths relative to '/'.
+    my @backup_paths;
+    while (my $path = shift @_) {
+        push @backup_paths, path( $path )->relative('/');
+    }
 
     say "Backup: $tar_file";
     warn "[WARN] $tar_file exists, might overwrite.\n" if -e $tar_file;
     print "\n";
-    # All paths should be relative to $ENV{HOME}.
-    tar_create($tar_file, "-C", $ENV{HOME}, @_);
+
+    # All paths should be relative to '/'.
+    tar_create($tar_file, "-C", '/', @backup_paths);
 
     $? # tar returns 1 on errors.
         ? die "Backup creation failed :: $?\n"
         # Print absolute paths for all backup files/directories.
-        : say path($_)->absolute($ENV{HOME}), " backed up."
-        foreach @backup_paths;
+        : say path($_)->absolute('/'), " backed up." foreach @backup_paths;
 
     print "\n" and tar_list($tar_file) if $options{verbose};
     encrypt_sign($tar_file) if $options{encrypt} or $options{sign};
@@ -120,18 +133,23 @@ Profile:};
         print "    $prof\n";
         print "        $_\n" foreach $profile{$prof}->@*;
     }
-    say qq{
+    print qq{
 Options:
-    --encrypt
-        Encrypt files with $gpg_fingerprint
-    --sign
-        Sign files with $gpg_fingerprint
-    --delete
-        Delete the tar file after running $gpg_bin
+    --encrypt };
+    print "[Enabled]" if $ENV{LEO_ENCRYPT};
+    print qq{
+        Encrypt files with $gpg_fingerprint\n
+    --sign };
+        print "[Enabled]" if $ENV{LEO_SIGN};
+    print qq{
+        Sign files with $gpg_fingerprint\n
+    --delete };
+            print "[Enabled]" if $ENV{LEO_DELETE};
+    print qq{
+        Delete the tar file after running $gpg_bin\n
     --verbose
     --help};
 }
-
 
 sub tar_create { run3 ["/bin/tar", "cf", @_]; }
 sub tar_list { run3 ["/bin/tar", "tvf", @_]; }
