@@ -33,14 +33,9 @@ $config = Config::Tiny->read( $config_file )
 
 # Reading config file.
 
-my $ymd = ymd(); # YYYY-MM-DD.
-my $backup_dir = $config->{_}->{backup_dir} || "/tmp/backups";
-$backup_dir .= "/$ymd";
-
-path($backup_dir)->mkpath; # Create backup directory.
-
-my $gpg_fingerprint = $config->{_}->{gpg_fingerprint};
-my $gpg_bin = $config->{_}->{gpg_bin};
+foreach my $key (sort keys $config->{_}->%*) {
+    $options{$key} = $config->{_}->{$key};
+}
 
 my %profile;
 
@@ -50,6 +45,15 @@ foreach my $section (sort keys $config->%*) {
         push @{ $profile{$section} }, $key;
     }
 }
+
+my $ymd = ymd(); # YYYY-MM-DD.
+my $backup_dir = $options{backup_dir} || "/tmp/backups";
+$backup_dir .= "/$ymd";
+
+path($backup_dir)->mkpath; # Create backup directory.
+
+my $gpg_fingerprint = $options{gpg_fingerprint};
+my $gpg_bin = $options{gpg_bin};
 
 # Print help.
 HelpMessage() and exit 0 if scalar @ARGV == 0 or $options{help};
@@ -128,27 +132,26 @@ sub HelpMessage {
 
 Profile:};
     foreach my $prof (sort keys %profile) {
-        next if substr($prof, 0, 1) eq "."; # Profiles starting with a
-                                            # dot will have alias.
         print "    $prof\n";
         print "        $_\n" foreach $profile{$prof}->@*;
     }
     print qq{
 Options:
     --encrypt };
-    print "[Enabled]" if $ENV{LEO_ENCRYPT};
+    print "[Enabled]" if $options{encrypt};
     print qq{
         Encrypt files with $gpg_fingerprint\n
     --sign };
-        print "[Enabled]" if $ENV{LEO_SIGN};
+        print "[Enabled]" if $options{sign};
     print qq{
         Sign files with $gpg_fingerprint\n
     --delete };
-            print "[Enabled]" if $ENV{LEO_DELETE};
+            print "[Enabled]" if $options{delete};
     print qq{
         Delete the tar file after running $gpg_bin\n
     --verbose
-    --help};
+    --help
+};
 }
 
 sub tar_create { run3 ["/bin/tar", "cf", @_]; }
