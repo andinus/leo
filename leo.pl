@@ -42,7 +42,17 @@ my %profile;
 foreach my $section (sort keys $config->%*) {
     next if $section eq "_";
     foreach my $key (sort keys $config->{$section}->%*) {
-        push @{ $profile{$section} }, $key;
+        # Override encrypt & sign options with local values.
+        next and $profile{$section}{encrypt} = $config->{$section}->{$key}
+            if $key eq "encrypt";
+
+        next and $profile{$section}{sign} = $config->{$section}->{$key}
+            if $key eq "sign";
+
+        next and push @{ $profile{$section}{exclude} }, $key
+            if $config->{$section}->{$key} eq "exclude";
+
+        push @{ $profile{$section}{backup} }, $key;
     }
 }
 
@@ -62,27 +72,35 @@ HelpMessage() and exit 0 if scalar @ARGV == 0 or $options{help};
 foreach my $arg ( @ARGV ) {
     if ( $profile{ $arg } ) {
         say "++++++++********++++++++";
-
-        # Deref the array here because we want flattened list.
-        backup("$backup_dir/${arg}.tar", $profile{$arg}->@*);
-    } elsif ( -e $arg ) {
-        # If the file/directory exist then create a new profile & run
-        # backup.
-        say "++++++++********++++++++";
-        warn "[WARN] leo: creating temporary profile: `$arg'\n";
-        backup("$backup_dir/${arg}.tar", $arg);
+        backup($arg);
     } else {
         warn "[WARN] leo: no such profile :: `$arg' \n";
     }
 }
 
 sub backup {
-    my $tar_file = shift @_;
+    my $prof = shift @_;
+    my $tar_file = "$backup_dir/${prof}.tar";
 
     # Make @backup_paths relative to '/'.
     my @backup_paths;
-    while (my $path = shift @_) {
-        push @backup_paths, path( $path )->relative('/');
+
+    my @tmp_exclude;
+    @tmp_exclude = $profile{$prof}{exclude}->@*
+        if $profile{$prof}{exclude};
+    my %exclude_paths = map { $_ => 1 } @tmp_exclude;
+
+    my @tmp_paths = $profile{$prof}{backup}->@*;
+    while (my $path = shift @tmp_paths) {
+        if (-d $path) {
+            my $iter = path($path)->iterator;
+            while ( my $path = $iter->() ) {
+                push @backup_paths, path( $path )->relative('/')
+                    unless $exclude_paths{$path};
+            }
+        } else {
+            push @backup_paths, path( $path )->relative('/');
+        }
     }
 
     say "Backup: $tar_file";
@@ -133,7 +151,7 @@ sub HelpMessage {
 Profile:};
     foreach my $prof (sort keys %profile) {
         print "    $prof\n";
-        print "        $_\n" foreach $profile{$prof}->@*;
+        print "        $_\n" foreach $profile{$prof}{backup}->@*;
     }
     print qq{
 Options:
