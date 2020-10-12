@@ -41,15 +41,17 @@ my %profile;
 
 foreach my $section (sort keys $config->%*) {
     next if $section eq "_";
-    foreach my $key (sort keys $config->{$section}->%*) {
+    MAIN: foreach my $key (sort keys $config->{$section}->%*) {
         # Override encrypt & sign options with local values.
-        next and $profile{$section}{encrypt} = $config->{$section}->{$key}
-            if $key eq "encrypt";
+          foreach (qw( encrypt sign )) {
+              $profile{$section}{$_} = $options{$_};
+            if ($key eq $_) {
+                $profile{$section}{$_} = $config->{$section}->{$key};
+                next MAIN;
+            }
+        }
 
-        next and $profile{$section}{sign} = $config->{$section}->{$key}
-            if $key eq "sign";
-
-        next and push @{ $profile{$section}{exclude} }, $key
+        push @{ $profile{$section}{exclude} }, $key and next
             if $config->{$section}->{$key} eq "exclude";
 
         push @{ $profile{$section}{backup} }, $key;
@@ -116,16 +118,18 @@ sub backup {
         : say path($_)->absolute('/'), " backed up." foreach @backup_paths;
 
     print "\n" and tar_list($tar_file) if $options{verbose};
-    encrypt_sign($tar_file) if $options{encrypt} or $options{sign};
+    encrypt_sign($prof) if $profile{$prof}{sign} or $profile{$prof}{encrypt};
 }
 
 # Encrypt, Sign backups.
 sub encrypt_sign() {
-    my $file = shift @_;
+    my $prof = shift @_;
+    my $file = "$backup_dir/${prof}.tar";;
+
     my @options = ();
     push @options, "--recipient", $gpg_fingerprint, "--encrypt"
-        if $options{encrypt};
-    push @options, "--sign" if $options{sign};
+        if $profile{$prof}{encrypt};
+    push @options, "--sign" if $profile{$prof}{sign};
     push @options, "--verbose" if $options{verbose};
 
     say "\nEncrypt/Sign: $file";
@@ -136,8 +140,8 @@ sub encrypt_sign() {
     $? # We assume non-zero is an error.
         ? die "Encrypt/Sign failed :: $?\n"
         : print "\nOutput: $file.gpg";
-    print " [Encrypted]" if $options{encrypt};
-    print " [Signed]" if $options{sign};
+    print " [Encrypted]" if $profile{$prof}{encrypt};
+    print " [Signed]" if $profile{$prof}{sign};
     print "\n";
 
     unlink $file and say "$file deleted."
@@ -150,8 +154,12 @@ sub HelpMessage {
 
 Profile:};
     foreach my $prof (sort keys %profile) {
-        print "    $prof\n";
+        print "    $prof";
+        print " [Encrypt]" if $profile{$prof}{encrypt};
+        print " [Sign]" if $profile{$prof}{sign};
+        print "\n";
         print "        $_\n" foreach $profile{$prof}{backup}->@*;
+        print "\n";
     }
     print qq{
 Options:
