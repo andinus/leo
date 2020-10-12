@@ -59,13 +59,10 @@ pre-defined list. It can encrypt/sign files with gpg2(1).
 ───────────
 
   Profile is a simple hash table (`%profile') which contains the list of
-  profiles. The profiles are mapped to a list of file paths relative to
-  `$HOME' which are to be backed up.
+  profiles. The profiles are mapped to a list of file paths which are to
+  be backed up.
 
   You can run `help' to see all the profiles along with the paths.
-
-  Creating profiles is not required anymore, you can pass it any file in
-  current directory & it'll create a temporary profile.
 
 
 2.2 Options
@@ -87,6 +84,9 @@ pre-defined list. It can encrypt/sign files with gpg2(1).
 
   `encrypt_sign' handles `gpg2' related functions. It passes `--yes' by
   default.
+
+  • `encrypt' / `sign' can also be set in configuration file, one can
+    also configure it for specific profile.
 
   *Note*: `gpg2' might compress the backups depending on your config.
    Default is to enable compression, if you don't want this then add `-z
@@ -119,9 +119,6 @@ pre-defined list. It can encrypt/sign files with gpg2(1).
   │ # your shell rc & then just run ``leo documents journal ssh pass'' to
   │ # do the same.
   │ LEO_ENCRYPT=1 LEO_SIGN=1 LEO_DELETE=1 leo documents journal ssh pass
-  │
-  │ # Backup this specific file.
-  │ cd $HOME/documents; leo --encrypt --sign andinus.org.gpg
   └────
 
 
@@ -131,8 +128,7 @@ pre-defined list. It can encrypt/sign files with gpg2(1).
   It's very easy to setup `leo', I made a demo video to show this. I
   already have Perl environment setup for this.
 
-  *Note*: It's even more easy now, you don't have to create profiles
-  anymore.
+  *Note*: Leo has changed since this was published.
 
   • Leo 2020-08-31: <https://asciinema.org/a/F97hVfgXDcd9g5IlST1t27ps3>
 
