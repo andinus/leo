@@ -41,14 +41,18 @@ my %profile;
 
 foreach my $section (sort keys $config->%*) {
     next if $section eq "_";
-    MAIN: foreach my $key (sort keys $config->{$section}->%*) {
+
+    # Set global values to local profiles.
+    foreach (qw( encrypt sign )) {
+        $profile{$section}{$_} = $options{$_};
+    }
+
+    foreach my $key (sort keys $config->{$section}->%*) {
         # Override encrypt & sign options with local values.
-          foreach (qw( encrypt sign )) {
-              $profile{$section}{$_} = $options{$_};
-            if ($key eq $_) {
-                $profile{$section}{$_} = $config->{$section}->{$key};
-                next MAIN;
-            }
+        if ($key eq "encrypt"
+                or $key eq "sign") {
+            $profile{$section}{$key} = $config->{$section}->{$key};
+            next;
         }
 
         push @{ $profile{$section}{exclude} }, $key and next
