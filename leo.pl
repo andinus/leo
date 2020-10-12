@@ -95,7 +95,7 @@ sub backup {
     my @tmp_paths = $profile{$prof}{backup}->@*;
     while (my $path = shift @tmp_paths) {
         if (-d $path) {
-            my $iter = path($path)->iterator;
+            my $iter = path($path)->iterator();
             while ( my $path = $iter->() ) {
                 push @backup_paths, path( $path )->relative('/')
                     unless $exclude_paths{$path};
