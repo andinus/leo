@@ -39,6 +39,9 @@ pre-defined list. It can encrypt/sign files with gpg2(1).
   │ git clone https://git.tilde.institute/andinus/leo && \
   │     cd leo
   │
+  │ # Install dependencies with cpanm.
+  │ cpanm --installdeps .
+  │
   │ # Copy the config.
   │ cp share/leo.conf $HOME/.config/leo.conf
   │

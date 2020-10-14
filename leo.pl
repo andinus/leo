@@ -165,8 +165,7 @@ Profile:};
         print "        $_\n" foreach $profile{$prof}{backup}->@*;
         print "\n";
     }
-    print qq{
-Options:
+    print qq{Options:
     --encrypt };
     print "[Enabled]" if $options{encrypt};
     print qq{
