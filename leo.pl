@@ -68,8 +68,8 @@ $backup_dir .= "/$ymd";
 
 path($backup_dir)->mkpath; # Create backup directory.
 
-my $gpg_fingerprint = $options{gpg_fingerprint};
-my $gpg_bin = $options{gpg_bin};
+my $gpg_fingerprint = $options{gpg_fingerprint} || "`nil'";
+my $gpg_bin = $options{gpg_bin} || "gpg";
 
 # Print help.
 HelpMessage() and exit 0 if scalar @ARGV == 0 or $options{help};
@@ -171,11 +171,11 @@ Profile:};
     print qq{
         Encrypt files with $gpg_fingerprint\n
     --sign };
-        print "[Enabled]" if $options{sign};
+    print "[Enabled]" if $options{sign};
     print qq{
         Sign files with $gpg_fingerprint\n
     --delete };
-            print "[Enabled]" if $options{delete};
+    print "[Enabled]" if $options{delete};
     print qq{
         Delete the tar file after running $gpg_bin\n
     --verbose
