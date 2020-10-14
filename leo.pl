@@ -14,12 +14,12 @@ use Getopt::Long qw/ GetOptions /;
 my %options = (
     encrypt => $ENV{LEO_ENCRYPT},
     sign => $ENV{LEO_SIGN},
-    delete => $ENV{LEO_DELETE},
+    sign => $ENV{LEO_SIGNIFY},
 );
 
 GetOptions(
     \%options,
-    qw{ verbose encrypt sign delete help }
+    qw{ verbose encrypt sign signify delete help }
 ) or die "Error in command line arguments\n";
 
 # Configuration.
@@ -137,7 +137,7 @@ sub backup {
 }
 
 # Encrypt, Sign backups.
-sub encrypt_sign() {
+sub encrypt_sign {
     my $prof = shift @_;
     my $file = "$backup_dir/${prof}.tar";
 
@@ -164,12 +164,15 @@ sub encrypt_sign() {
         if $options{delete};
 }
 
-sub signify() {
+sub signify {
     my $prof = shift @_;
     my $file = "$backup_dir/${prof}.tar";
 
+    die "\nSignify: seckey doesn't exist\n"
+        unless $options{signify_seckey} and -e $options{signify_seckey};
+
     my @options = ("-S");
-    push @options, "-s", $profile{_}{signify_seckey};
+    push @options, "-s", $options{signify_seckey};
     push @options, "-m", $file;
     push @options, "-x", "$file.sig";
 
