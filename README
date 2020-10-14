@@ -13,7 +13,7 @@ Table of Contents
 .. 1. Profile
 .. 2. Options
 ..... 1. encrypt/sign
-..... 2. delete
+..... 2. signify
 ..... 3. help
 3. Example
 4. Demo
@@ -21,7 +21,8 @@ Table of Contents
 
 
 Leo is a simple backup program. It creates tar(1) files from a
-pre-defined list. It can encrypt/sign files with gpg2(1).
+pre-defined list. It can encrypt/sign files with gpg2(1) & sign files
+with signify(1).
 
 • Web-site: <https://andinus.nand.sh/leo>
 • Source: <https://git.tilde.institute/andinus/leo>
@@ -97,11 +98,10 @@ pre-defined list. It can encrypt/sign files with gpg2(1).
    compression.
 
 
-2.2.2 delete
-╌╌╌╌╌╌╌╌╌╌╌╌
+2.2.2 signify
+╌╌╌╌╌╌╌╌╌╌╌╌╌
 
-  Removes the tar file after running gpg2(1). This means that either
-  `encrypt' or `sign' option must be passed.
+  `signify' will invoke `signify(1)' & the file will be signed.
 
 
 2.2.3 help
