@@ -43,14 +43,15 @@ foreach my $section (sort keys $config->%*) {
     next if $section eq "_";
 
     # Set global values to local profiles.
-    foreach (qw( encrypt sign )) {
+    foreach (qw( encrypt sign signify )) {
         $profile{$section}{$_} = $options{$_};
     }
 
     foreach my $key (sort keys $config->{$section}->%*) {
         # Override encrypt & sign options with local values.
         if ($key eq "encrypt"
-                or $key eq "sign") {
+                or $key eq "sign"
+                or $key eq "signify") {
             $profile{$section}{$key} = $config->{$section}->{$key};
             next;
         }
@@ -75,12 +76,23 @@ my $gpg_bin = $options{gpg_bin} || "gpg";
 HelpMessage() and exit 0 if scalar @ARGV == 0 or $options{help};
 
 # Parsing the arguments.
-foreach my $arg ( @ARGV ) {
-    if ( $profile{ $arg } ) {
+foreach my $prof ( @ARGV ) {
+    if ( $profile{ $prof } ) {
         say "++++++++********++++++++";
-        backup($arg);
+
+        backup($prof);
+
+        # It will fail because signify will look for "${prof}.tar" but
+        # delete option would've deleted it. I can make signify look
+        # for "${prof}.tar.gpg" but this is fine for now.
+        warn "[WARN] signify might fail if used with gpg & delete option enabled\n"
+            if ($profile{$prof}{signify}
+                and ($profile{$prof}{encrypt} and $options{delete}));
+
+        signify($prof) if $profile{$prof}{signify};
+        encrypt_sign($prof) if $profile{$prof}{sign} or $profile{$prof}{encrypt};
     } else {
-        warn "[WARN] leo: no such profile :: `$arg' \n";
+        warn "[WARN] leo: no such profile :: `$prof' \n";
     }
 }
 
@@ -122,13 +134,12 @@ sub backup {
         : say path($_)->absolute('/'), " backed up." foreach @backup_paths;
 
     print "\n" and tar_list($tar_file) if $options{verbose};
-    encrypt_sign($prof) if $profile{$prof}{sign} or $profile{$prof}{encrypt};
 }
 
 # Encrypt, Sign backups.
 sub encrypt_sign() {
     my $prof = shift @_;
-    my $file = "$backup_dir/${prof}.tar";;
+    my $file = "$backup_dir/${prof}.tar";
 
     my @options = ();
     push @options, "--recipient", $gpg_fingerprint, "--encrypt"
@@ -153,6 +164,27 @@ sub encrypt_sign() {
         if $options{delete};
 }
 
+sub signify() {
+    my $prof = shift @_;
+    my $file = "$backup_dir/${prof}.tar";
+
+    my @options = ("-S");
+    push @options, "-s", $profile{_}{signify_seckey};
+    push @options, "-m", $file;
+    push @options, "-x", "$file.sig";
+
+    say "\nSignify: $file";
+    warn "[WARN] $file.sig exists, might overwrite.\n" if -e "$file.sig";
+
+    run3 ["signify", @options];
+
+    $? # We assume non-zero is an error.
+        ? die "Signify failed :: $?\n"
+        : print "\nOutput: $file.sig";
+    print " [Signify]";
+    print "\n";
+}
+
 sub HelpMessage {
     say qq{Backup files to $backup_dir.
 
@@ -161,6 +193,7 @@ Profile:};
         print "    $prof";
         print " [Encrypt]" if $profile{$prof}{encrypt};
         print " [Sign]" if $profile{$prof}{sign};
+        print " [Signify]" if $profile{$prof}{signify};
         print "\n";
         print "        $_\n" foreach $profile{$prof}{backup}->@*;
         print "\n";
