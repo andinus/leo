@@ -85,9 +85,9 @@ foreach my $prof ( @ARGV ) {
         # It will fail because signify will look for "${prof}.tar" but
         # delete option would've deleted it. I can make signify look
         # for "${prof}.tar.gpg" but this is fine for now.
-        warn "[WARN] signify might fail if used with gpg & delete option enabled\n"
+        warn "[WARN] signify might fail if used with gpg\n"
             if ($profile{$prof}{signify}
-                and ($profile{$prof}{encrypt} and $options{delete}));
+                and ($profile{$prof}{encrypt} or $profile{$prof}{sign}));
 
         signify($prof) if $profile{$prof}{signify};
         encrypt_sign($prof) if $profile{$prof}{sign} or $profile{$prof}{encrypt};
