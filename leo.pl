@@ -70,7 +70,7 @@ $backup_dir .= "/$ymd";
 path($backup_dir)->mkpath; # Create backup directory.
 
 my $gpg_fingerprint = $options{gpg_fingerprint} || "`nil'";
-my @gpg_recipients = split / /, $options{gpg_recipient};
+my @gpg_recipients = split / /, $options{gpg_recipients};
 my $gpg_bin = $options{gpg_bin} || "gpg";
 
 # Print help.
