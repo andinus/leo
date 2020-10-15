@@ -79,7 +79,7 @@ with signify(1).
   ━━━━━━━━━━━━━━━━━━━━━━━━
    encrypt  `LEO_ENCRYPT'
    sign     `LEO_SIGN'
-   delete   `LEO_DELETE'
+   signify  `LEO_SIGNIFY'
   ━━━━━━━━━━━━━━━━━━━━━━━━
 
 
@@ -114,14 +114,17 @@ with signify(1).
 ═════════
 
   ┌────
-  │ # This will encrypt, sign & also delete the tar file for documents,
-  │ # journal, pass & ssh profile.
-  │ leo --encrypt --sign --delete documents journal pass ssh
+  │ # This will encrypt, sign the tar file for documents, journal, pass &
+  │ # ssh profile.
+  │ leo --encrypt --sign documents journal pass ssh
   │
   │ # This will do the same. You can add these environment variables to
   │ # your shell rc & then just run ``leo documents journal ssh pass'' to
   │ # do the same.
-  │ LEO_ENCRYPT=1 LEO_SIGN=1 LEO_DELETE=1 leo documents journal ssh pass
+  │ LEO_ENCRYPT=1 LEO_SIGN=1 leo documents journal ssh pass
+  │
+  │ # Sign the file with signify(1).
+  │ leo --signify journal
   └────
 
 
