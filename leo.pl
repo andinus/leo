@@ -14,7 +14,7 @@ use Getopt::Long qw/ GetOptions /;
 my %options = (
     encrypt => $ENV{LEO_ENCRYPT},
     sign => $ENV{LEO_SIGN},
-    sign => $ENV{LEO_SIGNIFY},
+    signify => $ENV{LEO_SIGNIFY},
 );
 
 GetOptions(
