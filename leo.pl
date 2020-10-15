@@ -217,10 +217,10 @@ Profile:};
     print "[Enabled]" if $options{sign};
     print qq{
         Sign files with $gpg_fingerprint\n
-    --delete };
-    print "[Enabled]" if $options{delete};
+    --signify };
+    print "[Enabled]" if $options{signify};
     print qq{
-        Delete the tar file after running $gpg_bin\n
+        Sign with signify(1)\n
     --verbose
     --help
 };
