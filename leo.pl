@@ -160,8 +160,7 @@ sub encrypt_sign {
     print "\n";
 
     unlink $file and say "$file deleted."
-        or warn "[WARN] Could not delete $file: $!\n"
-        if $options{delete};
+        or warn "[WARN] Could not delete $file: $!\n";
 }
 
 sub signify {
