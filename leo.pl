@@ -70,6 +70,7 @@ $backup_dir .= "/$ymd";
 path($backup_dir)->mkpath; # Create backup directory.
 
 my $gpg_fingerprint = $options{gpg_fingerprint} || "`nil'";
+my @gpg_recipients = split / /, $options{gpg_recipient};
 my $gpg_bin = $options{gpg_bin} || "gpg";
 
 # Print help.
@@ -142,8 +143,15 @@ sub encrypt_sign {
     my $file = "$backup_dir/${prof}.tar";
 
     my @options = ();
-    push @options, "--recipient", $gpg_fingerprint, "--encrypt"
-        if $profile{$prof}{encrypt};
+    push @options, "--default-key", $gpg_fingerprint;
+
+    if ( $profile{$prof}{encrypt} ) {
+        push @options, "--encrypt";
+        push @options, "--recipient", $gpg_fingerprint;
+        push @options, "--recipient", $_
+            foreach @gpg_recipients;
+    }
+
     push @options, "--sign" if $profile{$prof}{sign};
     push @options, "--verbose" if $options{verbose};
 
