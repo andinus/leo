@@ -63,9 +63,9 @@ foreach my $section (sort keys $config->%*) {
     }
 }
 
-my $ymd = ymd(); # YYYY-MM-DD.
+my $date = date();
 my $backup_dir = $options{backup_dir} || "/tmp/backups";
-$backup_dir .= "/$ymd";
+# $backup_dir .= "/$date";
 
 path($backup_dir)->mkpath; # Create backup directory.
 
@@ -81,6 +81,7 @@ foreach my $prof ( @ARGV ) {
     if ( $profile{ $prof } ) {
         say "++++++++********++++++++";
 
+        path("$backup_dir/${prof}")->mkpath; # Create backup directory.
         backup($prof);
 
         # It will fail because signify will look for "${prof}.tar" but
@@ -99,7 +100,7 @@ foreach my $prof ( @ARGV ) {
 
 sub backup {
     my $prof = shift @_;
-    my $tar_file = "$backup_dir/${prof}.tar";
+    my $tar_file = "$backup_dir/${prof}/${date}.tar";
 
     # Make @backup_paths relative to '/'.
     my @backup_paths;
@@ -140,7 +141,7 @@ sub backup {
 # Encrypt, Sign backups.
 sub encrypt_sign {
     my $prof = shift @_;
-    my $file = "$backup_dir/${prof}.tar";
+    my $file = "$backup_dir/${prof}/${date}.tar";
 
     my @options = ();
     push @options, "--default-key", $gpg_fingerprint;
@@ -173,7 +174,7 @@ sub encrypt_sign {
 
 sub signify {
     my $prof = shift @_;
-    my $file = "$backup_dir/${prof}.tar";
+    my $file = "$backup_dir/${prof}/${date}.tar";
 
     die "\nSignify: seckey doesn't exist\n"
         unless $options{signify_seckey} and -e $options{signify_seckey};
@@ -229,9 +230,9 @@ Profile:};
 sub tar_create { run3 ["/bin/tar", "cf", @_]; }
 sub tar_list { run3 ["/bin/tar", "tvf", @_]; }
 
-sub ymd {
+sub date {
     my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) =
-        localtime(time);
+        gmtime(time);
 
     $year += 1900; # $year contains the number of years since 1900.
 
@@ -240,6 +241,11 @@ sub ymd {
     my @months = qw( 01 02 03 04 05 06 07 08 09 10 11 12 );
     my $month = $months[$mon];
 
+    # Pad by 2 zeros.
     $mday = sprintf "%02d", $mday;
-    return "$year-$month-$mday";
+    $hour = sprintf "%02d", $hour;
+    $min = sprintf "%02d", $min;
+    $min = sprintf "%02d", $sec;
+
+    return "$year-$month-${mday}T${hour}:${min}:${sec}Z";
 }
