@@ -245,7 +245,7 @@ sub date {
     $mday = sprintf "%02d", $mday;
     $hour = sprintf "%02d", $hour;
     $min = sprintf "%02d", $min;
-    $min = sprintf "%02d", $sec;
+    $sec = sprintf "%02d", $sec;
 
     return "$year-$month-${mday}T${hour}:${min}:${sec}Z";
 }
