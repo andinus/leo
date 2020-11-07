@@ -50,8 +50,8 @@ foreach my $section (sort keys $config->%*) {
     foreach my $key (sort keys $config->{$section}->%*) {
         # Override encrypt & sign options with local values.
         if ($key eq "encrypt"
-                or $key eq "sign"
-                or $key eq "signify") {
+            or $key eq "sign"
+            or $key eq "signify") {
             $profile{$section}{$key} = $config->{$section}->{$key};
             next;
         }
@@ -65,7 +65,6 @@ foreach my $section (sort keys $config->%*) {
 
 my $date = date();
 my $backup_dir = $options{backup_dir} || "/tmp/backups";
-# $backup_dir .= "/$date";
 
 path($backup_dir)->mkpath; # Create backup directory.
 
@@ -84,12 +83,16 @@ foreach my $prof ( @ARGV ) {
         path("$backup_dir/${prof}")->mkpath; # Create backup directory.
         backup($prof);
 
-        # It will fail because signify will look for "${prof}.tar" but
-        # delete option would've deleted it. I can make signify look
-        # for "${prof}.tar.gpg" but this is fine for now.
-        warn "[WARN] signify might fail if used with gpg\n"
-            if ($profile{$prof}{signify}
-                and ($profile{$prof}{encrypt} or $profile{$prof}{sign}));
+        unless ($options{signify_and_gnupg_warning_disable}) {
+            warn "
+[WARN] signify will sign `.tar' & gnupg will delete it to create `.tar.gpg'.
+The signature should be valid after decrypting the `.tar' archive.
+Add `signify_and_gnupg_warning_disable = 1` in your config file to disable this
+warning.
+\n"
+                if ($profile{$prof}{signify}
+                    and ($profile{$prof}{encrypt} or $profile{$prof}{sign}));
+    }
 
         signify($prof) if $profile{$prof}{signify};
         encrypt_sign($prof) if $profile{$prof}{sign} or $profile{$prof}{encrypt};
@@ -112,6 +115,8 @@ sub backup {
 
     my @tmp_paths = $profile{$prof}{backup}->@*;
     while (my $path = shift @tmp_paths) {
+        # If it's a directory then check if we need to exclude any
+        # child path.
         if (-d $path) {
             my $iter = path($path)->iterator();
             while ( my $path = $iter->() ) {
