@@ -14,7 +14,8 @@ Table of Contents
 .. 2. Options
 ..... 1. encrypt/sign
 ..... 2. signify
-..... 3. help
+..... 3. gzip
+..... 4. help
 3. Example
 4. Demo
 5. History
@@ -80,6 +81,7 @@ with signify(1).
    encrypt  `LEO_ENCRYPT'
    sign     `LEO_SIGN'
    signify  `LEO_SIGNIFY'
+   gzip     `LEO_GZIP'
   ━━━━━━━━━━━━━━━━━━━━━━━━
 
 
@@ -104,7 +106,13 @@ with signify(1).
   `signify' will invoke `signify(1)' & the file will be signed.
 
 
-2.2.3 help
+2.2.3 gzip
+╌╌╌╌╌╌╌╌╌╌
+
+  `gzip' will compress the tar archive with `gzip(1)'.
+
+
+2.2.4 help
 ╌╌╌╌╌╌╌╌╌╌
 
   Running just `leo' will print help.

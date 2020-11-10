@@ -15,11 +15,12 @@ my %options = (
     encrypt => $ENV{LEO_ENCRYPT},
     sign => $ENV{LEO_SIGN},
     signify => $ENV{LEO_SIGNIFY},
+    gzip => $ENV{LEO_GZIP},
 );
 
 GetOptions(
     \%options,
-    qw{ verbose encrypt sign signify delete help }
+    qw{ verbose encrypt sign signify gzip help }
 ) or die "Error in command line arguments\n";
 
 # Configuration.
@@ -43,7 +44,7 @@ foreach my $section (sort keys $config->%*) {
     next if $section eq "_";
 
     # Set global values to local profiles.
-    foreach (qw( encrypt sign signify )) {
+    foreach (qw( encrypt sign signify gzip )) {
         $profile{$section}{$_} = $options{$_};
     }
 
@@ -51,7 +52,8 @@ foreach my $section (sort keys $config->%*) {
         # Override encrypt & sign options with local values.
         if ($key eq "encrypt"
             or $key eq "sign"
-            or $key eq "signify") {
+            or $key eq "signify"
+            or $key eq "gzip") {
             $profile{$section}{$key} = $config->{$section}->{$key};
             next;
         }
@@ -80,8 +82,11 @@ foreach my $prof ( @ARGV ) {
     if ( $profile{ $prof } ) {
         say "++++++++********++++++++";
 
+        my $file = "$backup_dir/${prof}/${date}.tar";
+        $file .= ".gz" if $profile{$prof}{gzip};
+
         path("$backup_dir/${prof}")->mkpath; # Create backup directory.
-        backup($prof);
+        backup($prof, $file);
 
         unless ($options{signify_and_gnupg_warning_disable}) {
             warn "
@@ -94,8 +99,8 @@ warning.
                     and ($profile{$prof}{encrypt} or $profile{$prof}{sign}));
     }
 
-        signify($prof) if $profile{$prof}{signify};
-        encrypt_sign($prof) if $profile{$prof}{sign} or $profile{$prof}{encrypt};
+        signify($prof, $file) if $profile{$prof}{signify};
+        encrypt_sign($prof, $file) if $profile{$prof}{sign} or $profile{$prof}{encrypt};
     } else {
         warn "[WARN] leo: no such profile :: `$prof' \n";
     }
@@ -103,7 +108,10 @@ warning.
 
 sub backup {
     my $prof = shift @_;
-    my $tar_file = "$backup_dir/${prof}/${date}.tar";
+    my $tar_file = shift @_;
+
+    my @options;
+    push @options, "-z" if $profile{$prof}{gzip};
 
     # Make @backup_paths relative to '/'.
     my @backup_paths;
@@ -133,12 +141,14 @@ sub backup {
     print "\n";
 
     # All paths should be relative to '/'.
-    tar_create($tar_file, "-C", '/', @backup_paths);
+    tar_create($tar_file, @options, "-C", '/', @backup_paths);
 
     $? # tar returns 1 on errors.
         ? die "Backup creation failed :: $?\n"
         # Print absolute paths for all backup files/directories.
         : say path($_)->absolute('/'), " backed up." foreach @backup_paths;
+
+    print "File was compress with gzip(1)\n" if $profile{$prof}{gzip};
 
     print "\n" and tar_list($tar_file) if $options{verbose};
 }
@@ -146,7 +156,7 @@ sub backup {
 # Encrypt, Sign backups.
 sub encrypt_sign {
     my $prof = shift @_;
-    my $file = "$backup_dir/${prof}/${date}.tar";
+    my $file = shift @_;
 
     my @options = ();
     push @options, "--default-key", $gpg_fingerprint;
@@ -179,7 +189,7 @@ sub encrypt_sign {
 
 sub signify {
     my $prof = shift @_;
-    my $file = "$backup_dir/${prof}/${date}.tar";
+    my $file = shift @_;
 
     die "\nSignify: seckey doesn't exist\n"
         unless $options{signify_seckey} and -e $options{signify_seckey};
@@ -210,6 +220,7 @@ Profile:};
         print " [Encrypt]" if $profile{$prof}{encrypt};
         print " [Sign]" if $profile{$prof}{sign};
         print " [Signify]" if $profile{$prof}{signify};
+        print " [gzip]" if $profile{$prof}{gzip};
         print "\n";
         print "        $_\n" foreach $profile{$prof}{backup}->@*;
         print "\n";
@@ -227,6 +238,11 @@ Profile:};
     print "[Enabled]" if $options{signify};
     print qq{
         Sign with signify(1)\n
+    --gzip };
+        print "[Enabled]" if $options{gzip};
+    print qq{
+        Compress with gzip(1)
+
     --verbose
     --help
 };
