@@ -97,19 +97,13 @@ foreach my $prof ( @ARGV ) {
         path("$backup_dir/${prof}")->mkpath; # Create backup directory.
         backup($prof, $file);
 
-        unless ($options{signify_and_gnupg_warning_disable}) {
-            warn "
-[WARN] signify will sign `.tar' & gnupg will delete it to create `.tar.gpg'.
-The signature should be valid after decrypting the `.tar' archive.
-Add `signify_and_gnupg_warning_disable = 1` in your config file to disable this
-warning.
-\n"
-                if ($profile{$prof}{signify}
-                    and ($profile{$prof}{encrypt} or $profile{$prof}{sign}));
-    }
-
-        signify($prof, $file) if $profile{$prof}{signify};
         encrypt_sign($prof, $file) if $profile{$prof}{sign} or $profile{$prof}{encrypt};
+
+        # gpg would've removed the `.tar' file so we sign the
+        # encrypted file instead.
+        my $encrypted_file = "${file}.gpg";
+        $file = $encrypted_file if $profile{$prof}{sign} or $profile{$prof}{encrypt};
+        signify($prof, $file) if $profile{$prof}{signify};
     } else {
         warn "[WARN] leo: no such profile :: `$prof' \n";
     }
@@ -157,7 +151,7 @@ sub backup {
         # Print absolute paths for all backup files/directories.
         : say path($_)->absolute('/'), " backed up." foreach @backup_paths;
 
-    print "File was compress with gzip(1)\n" if $profile{$prof}{gzip};
+    print "File was compressed with gzip(1)\n" if $profile{$prof}{gzip};
 
     print "\n" and tar_list($tar_file) if $options{verbose};
 }
