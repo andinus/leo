@@ -9,6 +9,8 @@ use Path::Tiny;
 use Config::Tiny;
 use Getopt::Long qw/ GetOptions /;
 
+my $version = "leo v0.3.3";
+
 # Options.
 
 my %options = (
@@ -20,8 +22,11 @@ my %options = (
 
 GetOptions(
     \%options,
-    qw{ verbose encrypt sign signify gzip help }
+    qw{ verbose encrypt sign signify gzip help version }
 ) or die "Error in command line arguments\n";
+
+# Print version.
+print $version, "\n" and exit 0 if $options{version};
 
 # Configuration.
 
@@ -71,7 +76,11 @@ my $backup_dir = $options{backup_dir} || "/tmp/backups";
 path($backup_dir)->mkpath; # Create backup directory.
 
 my $gpg_fingerprint = $options{gpg_fingerprint} || "`nil'";
-my @gpg_recipients = split / /, $options{gpg_recipients};
+
+my @gpg_recipients;
+@gpg_recipients = split / /, $options{gpg_recipients}
+    if $options{gpg_recipients};
+
 my $gpg_bin = $options{gpg_bin} || "gpg";
 
 # Print help.
@@ -243,6 +252,7 @@ Profile:};
     print qq{
         Compress with gzip(1)
 
+    --version [$version]
     --verbose
     --help
 };
