@@ -59,6 +59,8 @@ with signify(1).
   I use this to quickly backup some of my files. It works on profiles,
   profiles are simple lists of files which get backed up.
 
+  *Note*: Backup file's mode will be changed to `0600'.
+
 
 2.1 Profile
 ───────────

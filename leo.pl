@@ -9,7 +9,7 @@ use Path::Tiny;
 use Config::Tiny;
 use Getopt::Long qw/ GetOptions /;
 
-my $version = "leo v0.3.3";
+my $version = "leo v0.3.4";
 
 # Options.
 
@@ -151,6 +151,8 @@ sub backup {
         # Print absolute paths for all backup files/directories.
         : say path($_)->absolute('/'), " backed up." foreach @backup_paths;
 
+    path($tar_file)->chmod(0600)
+        and print "Changed `$tar_file' mode to 0600.\n";
     print "File was compressed with gzip(1)\n" if $profile{$prof}{gzip};
 
     print "\n" and tar_list($tar_file) if $options{verbose};
@@ -188,6 +190,9 @@ sub encrypt_sign {
 
     unlink $file and say "$file deleted."
         or warn "[WARN] Could not delete $file: $!\n";
+
+    path("$file.gpg")->chmod(0600)
+        and print "Changed `$file.gpg' mode to 0600.\n";
 }
 
 sub signify {
