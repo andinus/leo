@@ -9,16 +9,8 @@ Table of Contents
 ─────────────────
 
 1. Installation
-2. Documentation
-.. 1. Profile
-.. 2. Options
-..... 1. encrypt/sign
-..... 2. signify
-..... 3. gzip
-..... 4. help
-3. Example
-4. Demo
-5. History
+.. 1. OpenBSD
+2. Demo
 
 
 Leo is a simple backup program. It creates tar(1) files from a
@@ -34,12 +26,9 @@ with signify(1).
 ══════════════
 
   ┌────
-  │ # Install all the dependencies. (OpenBSD)
-  │ doas pkg_add p5-IPC-Run3 p5-Config-Tiny p5-Path-Tiny
-  │
   │ # Clone the project.
-  │ git clone https://git.tilde.institute/andinus/leo && \
-  │     cd leo
+  │ git clone https://git.tilde.institute/andinus/leo
+  │ cd leo
   │
   │ # Install dependencies with cpanm.
   │ cpanm --installdeps .
@@ -48,103 +37,32 @@ with signify(1).
   │ cp share/leo.conf $HOME/.config/leo.conf
   │
   │ # Copy the script & make it executable.
-  │ cp leo.pl $HOME/bin/leo && \
-  │     chmod +x $HOME/bin/leo
+  │ sudo make install
   └────
 
 
-2 Documentation
-═══════════════
-
-  I use this to quickly backup some of my files. It works on profiles,
-  profiles are simple lists of files which get backed up.
-
-  *Note*: Backup file's mode will be changed to `0600'.
-
-
-2.1 Profile
+1.1 OpenBSD
 ───────────
 
-  Profile is a simple hash table (`%profile') which contains the list of
-  profiles. The profiles are mapped to a list of file paths which are to
-  be backed up.
-
-  You can run `help' to see all the profiles along with the paths.
-
-
-2.2 Options
-───────────
-
-  Some options can also be passed through environment variables. That
-  allows for configuration in shell rc file & the user can run leo
-  directly without looking at options.
-
-  ━━━━━━━━━━━━━━━━━━━━━━━━
-   encrypt  `LEO_ENCRYPT'
-   sign     `LEO_SIGN'
-   signify  `LEO_SIGNIFY'
-   gzip     `LEO_GZIP'
-  ━━━━━━━━━━━━━━━━━━━━━━━━
-
-
-2.2.1 encrypt/sign
-╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌
-
-  `encrypt_sign' handles `gpg2' related functions. It passes `--yes' by
-  default.
-
-  • `encrypt' / `sign' can also be set in configuration file, one can
-    also configure it for specific profile.
-
-  *Note*: `gpg2' might compress the backups depending on your config.
-   Default is to enable compression, if you don't want this then add `-z
-   0' to `@options'. `-z' specifies the compression level & 0 means no
-   compression.
-
-
-2.2.2 signify
-╌╌╌╌╌╌╌╌╌╌╌╌╌
-
-  `signify' will invoke `signify(1)' & the file will be signed.
-
-
-2.2.3 gzip
-╌╌╌╌╌╌╌╌╌╌
-
-  `gzip' will compress the tar archive with `gzip(1)'.
-
-
-2.2.4 help
-╌╌╌╌╌╌╌╌╌╌
-
-  Running just `leo' will print help.
-
-
-3 Example
-═════════
-
+  Clone & copy the config as shown above, then run these to install
+  dependencies & leo.
   ┌────
-  │ # This will encrypt, sign the tar file for documents, journal, pass &
-  │ # ssh profile.
-  │ leo --encrypt --sign documents journal pass ssh
+  │ # Install all the dependencies. (OpenBSD)
+  │ doas pkg_add p5-IPC-Run3 p5-Config-Tiny p5-Path-Tiny
   │
-  │ # This will do the same. You can add these environment variables to
-  │ # your shell rc & then just run ``leo documents journal ssh pass'' to
-  │ # do the same.
-  │ LEO_ENCRYPT=1 LEO_SIGN=1 leo documents journal ssh pass
-  │
-  │ # Sign the file with signify(1).
-  │ leo --signify journal
+  │ # The man-path `/usr/local/share/man` is not indexed by default on
+  │ # openbsd. Using the `/usr` prefix works around this issue.
+  │ doas make PREFIX=/usr install
   └────
 
 
-4 Demo
+2 Demo
 ══════
 
   It's very easy to setup `leo', I made a demo video to show this. I
   already have Perl environment setup for this.
 
-  *Note*: Leo has changed since this was published.
+  *Note*: Leo has changed *a lot* since this was published.
 
   • Leo 2020-08-31: <https://asciinema.org/a/F97hVfgXDcd9g5IlST1t27ps3>
 
@@ -154,28 +72,3 @@ with signify(1).
 
 [cast file]
 <https://andinus.nand.sh/static/leo/2020-08-31_leo-demo.cast>
-
-
-5 History
-═════════
-
-  This was Leo's initial description:
-
-        Leo is a program to run my personal scripts. You might not
-        find them useful, these were previously shell scripts that
-        I rewrote in Perl.
-
-  I had created a sync function initially & was going to expand it. Then
-  I decided to remove those sync functions because it was too complex, I
-  replaced then with simple `sh' scripts.
-
-  I added a simple `archive' function later & decided to turn Leo into
-  that function. So, it's not a meta-program anymore. I was thinking of
-  creating something that does all the things for me but that'll be too
-  complex.
-
-  Later on the same day I removed dispatch table & switched to using
-  simple hash of lists to store backup paths mapped to profiles. And
-  also changed the word "archive" to "backup" everywhere.
-
-  I added a simple INI based config file before 0.1.0 release.

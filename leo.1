@@ -1,0 +1,57 @@
+.TH LEO 1 "14 November 2020" "v0.4.0"
+
+.SH NAME
+leo \- a simple backup program
+
+.SH SYNOPSIS
+.B leo
+[--help] [--version] [--verbose] profiles
+.P
+
+.SH DESRIPTION
+.B leo
+is a simple backup program. It creates tar(1) files from a pre-defined
+list. It can encrypt/sign files with gpg2(1) & sign files with
+signify(1).
+
+I use this to quickly backup some of my files. It works on profiles,
+profiles are simple lists of files which get backed up.
+.SH PROFILE
+Profile is a simple hash table which contains the list of profiles.
+The profiles are mapped to a list of file paths which are to be backed
+up.
+.SH OPTIONS
+The options are as follows:
+.TP
+.B --verbose
+Verbose output. This flag will be passed to commands that leo
+executes.
+.TP
+.BI --version
+Print version.
+.TP
+.B --help
+Print help. This will also print list of profiles with their
+configuration.
+.SH ENVIRONMENT VARIABLES
+As shown in examples below, environment variables can be used to
+configure leo.
+
+Available options are:
+.B L_ENCRYPT
+.B L_SIGN
+.B L_SIGNIFY
+.B L_GZIP
+.SH EXAMPLES
+.TP
+.B leo journal emacs
+Backup `journal' & `emacs' profile.
+.TP
+.B L_ENCRYPT=1 leo journal
+Backup `journal' & encrypt it. This encrypt option can be over-ridden
+by the config file.
+.SH BUGS
+It'll set the tar & gpg output file's mode to 0600 & there is no way
+to configure that.
+.SH AUTHOR
+Andinus <andinus@nand.sh>

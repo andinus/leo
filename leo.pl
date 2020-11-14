@@ -7,23 +7,17 @@ use feature 'say';
 use IPC::Run3;
 use Path::Tiny;
 use Config::Tiny;
+use POSIX qw(strftime);
 use Getopt::Long qw/ GetOptions /;
 
-my $version = "leo v0.3.4";
+my $version = "leo v0.4.0";
 
 # Options.
-
-my %options = (
-    encrypt => $ENV{LEO_ENCRYPT},
-    sign => $ENV{LEO_SIGN},
-    signify => $ENV{LEO_SIGNIFY},
-    gzip => $ENV{LEO_GZIP},
-);
-
+my %options;
 GetOptions(
     \%options,
-    qw{ verbose encrypt sign signify gzip help version }
-) or die "Error in command line arguments\n";
+    qw{ verbose help version }
+) or die "leo: error in command line arguments\n";
 
 # Print version.
 print $version, "\n" and exit 0 if $options{version};
@@ -43,37 +37,40 @@ foreach my $key (sort keys $config->{_}->%*) {
     $options{$key} = $config->{_}->{$key};
 }
 
+# Die if user is using older config format.
+die "leo: old config format detected\n"
+    if exists $options{encrypt} or exists $options{sign};
+
 my %profile;
 
-foreach my $section (sort keys $config->%*) {
-    next if $section eq "_";
+foreach my $prof (sort keys $config->%*) {
+    next if $prof eq "_";
 
     # Set global values to local profiles.
-    foreach (qw( encrypt sign signify gzip )) {
-        $profile{$section}{$_} = $options{$_};
+    foreach (qw(L_ENCRYPT L_SIGN L_SIGNIFY L_GZIP)) {
+        $profile{$prof}{$_} = $options{$_};
     }
 
-    foreach my $key (sort keys $config->{$section}->%*) {
-        # Override encrypt & sign options with local values.
-        if ($key eq "encrypt"
-            or $key eq "sign"
-            or $key eq "signify"
-            or $key eq "gzip") {
-            $profile{$section}{$key} = $config->{$section}->{$key};
+    foreach my $key (sort keys $config->{$prof}->%*) {
+        # $profile{$prof} contains config values ($), {exclude}
+        # (@), {backup} (@).
+
+        # Set config values.
+        if ( length($key) >= 2
+             and substr($key, 0, 2) eq "L_") {
+            $profile{$prof}{$key} = $config->{$prof}->{$key};
             next;
         }
 
-        push @{ $profile{$section}{exclude} }, $key and next
-            if $config->{$section}->{$key} eq "exclude";
+        push @{ $profile{$prof}{exclude} }, $key and next
+            if $config->{$prof}->{$key} eq "exclude";
 
-        push @{ $profile{$section}{backup} }, $key;
+        push @{ $profile{$prof}{backup} }, $key;
     }
 }
 
 my $date = date();
 my $backup_dir = $options{backup_dir} || "/tmp/backups";
-
-path($backup_dir)->mkpath; # Create backup directory.
 
 my $gpg_fingerprint = $options{gpg_fingerprint} || "`nil'";
 
@@ -92,18 +89,18 @@ foreach my $prof ( @ARGV ) {
         say "++++++++********++++++++";
 
         my $file = "$backup_dir/${prof}/${date}.tar";
-        $file .= ".gz" if $profile{$prof}{gzip};
+        $file .= ".gz" if $profile{$prof}{L_GZIP};
 
         path("$backup_dir/${prof}")->mkpath; # Create backup directory.
         backup($prof, $file);
 
-        encrypt_sign($prof, $file) if $profile{$prof}{sign} or $profile{$prof}{encrypt};
+        encrypt_sign($prof, $file) if $profile{$prof}{L_SIGN} or $profile{$prof}{L_ENCRYPT};
 
         # gpg would've removed the `.tar' file so we sign the
         # encrypted file instead.
         my $encrypted_file = "${file}.gpg";
-        $file = $encrypted_file if $profile{$prof}{sign} or $profile{$prof}{encrypt};
-        signify($prof, $file) if $profile{$prof}{signify};
+        $file = $encrypted_file if $profile{$prof}{L_SIGN} or $profile{$prof}{L_ENCRYPT};
+        signify($prof, $file) if $profile{$prof}{L_SIGNIFY};
     } else {
         warn "[WARN] leo: no such profile :: `$prof' \n";
     }
@@ -114,7 +111,7 @@ sub backup {
     my $tar_file = shift @_;
 
     my @options;
-    push @options, "-z" if $profile{$prof}{gzip};
+    push @options, "-z" if $profile{$prof}{L_GZIP};
 
     # Make @backup_paths relative to '/'.
     my @backup_paths;
@@ -153,7 +150,7 @@ sub backup {
 
     path($tar_file)->chmod(0600)
         and print "Changed `$tar_file' mode to 0600.\n";
-    print "File was compressed with gzip(1)\n" if $profile{$prof}{gzip};
+    print "File was compressed with gzip(1)\n" if $profile{$prof}{L_GZIP};
 
     print "\n" and tar_list($tar_file) if $options{verbose};
 }
@@ -166,14 +163,14 @@ sub encrypt_sign {
     my @options = ();
     push @options, "--default-key", $gpg_fingerprint;
 
-    if ( $profile{$prof}{encrypt} ) {
+    if ( $profile{$prof}{L_ENCRYPT} ) {
         push @options, "--encrypt";
         push @options, "--recipient", $gpg_fingerprint;
         push @options, "--recipient", $_
             foreach @gpg_recipients;
     }
 
-    push @options, "--sign" if $profile{$prof}{sign};
+    push @options, "--sign" if $profile{$prof}{L_SIGN};
     push @options, "--verbose" if $options{verbose};
 
     say "\nEncrypt/Sign: $file";
@@ -184,8 +181,8 @@ sub encrypt_sign {
     $? # We assume non-zero is an error.
         ? die "Encrypt/Sign failed :: $?\n"
         : print "\nOutput: $file.gpg";
-    print " [Encrypted]" if $profile{$prof}{encrypt};
-    print " [Signed]" if $profile{$prof}{sign};
+    print " [Encrypted]" if $profile{$prof}{L_ENCRYPT};
+    print " [Signed]" if $profile{$prof}{L_SIGN};
     print "\n";
 
     unlink $file and say "$file deleted."
@@ -222,35 +219,22 @@ sub signify {
 sub HelpMessage {
     say qq{Backup files to $backup_dir.
 
++ means included
+- means excluded
+
 Profile:};
     foreach my $prof (sort keys %profile) {
         print "    $prof";
-        print " [Encrypt]" if $profile{$prof}{encrypt};
-        print " [Sign]" if $profile{$prof}{sign};
-        print " [Signify]" if $profile{$prof}{signify};
-        print " [gzip]" if $profile{$prof}{gzip};
+        print " [Encrypt]" if $profile{$prof}{L_ENCRYPT};
+        print " [Sign]" if $profile{$prof}{L_SIGN};
+        print " [Signify]" if $profile{$prof}{L_SIGNIFY};
+        print " [gzip]" if $profile{$prof}{L_GZIP};
         print "\n";
-        print "        $_\n" foreach $profile{$prof}{backup}->@*;
+        print "        + $_\n" foreach $profile{$prof}{backup}->@*;
+        print "        - $_\n" foreach $profile{$prof}{exclude}->@*;
         print "\n";
     }
     print qq{Options:
-    --encrypt };
-    print "[Enabled]" if $options{encrypt};
-    print qq{
-        Encrypt files with $gpg_fingerprint\n
-    --sign };
-    print "[Enabled]" if $options{sign};
-    print qq{
-        Sign files with $gpg_fingerprint\n
-    --signify };
-    print "[Enabled]" if $options{signify};
-    print qq{
-        Sign with signify(1)\n
-    --gzip };
-        print "[Enabled]" if $options{gzip};
-    print qq{
-        Compress with gzip(1)
-
     --version [$version]
     --verbose
     --help
@@ -260,22 +244,4 @@ Profile:};
 sub tar_create { run3 ["/bin/tar", "cf", @_]; }
 sub tar_list { run3 ["/bin/tar", "tvf", @_]; }
 
-sub date {
-    my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) =
-        gmtime(time);
-
-    $year += 1900; # $year contains the number of years since 1900.
-
-    # $mon the month in the range 0..11 , with 0 indicating January
-    # and 11 indicating December.
-    my @months = qw( 01 02 03 04 05 06 07 08 09 10 11 12 );
-    my $month = $months[$mon];
-
-    # Pad by 2 zeros.
-    $mday = sprintf "%02d", $mday;
-    $hour = sprintf "%02d", $hour;
-    $min = sprintf "%02d", $min;
-    $sec = sprintf "%02d", $sec;
-
-    return "$year-$month-${mday}T${hour}:${min}:${sec}Z";
-}
+sub date { return strftime '%FT%T%z', gmtime() }
