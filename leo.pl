@@ -13,7 +13,13 @@ use Getopt::Long qw/ GetOptions /;
 my $version = "leo v0.4.0";
 
 # Options.
-my %options;
+my %options = (
+    L_SIGN => $ENV{L_SIGN},
+    L_GZIP => $ENV{L_GZIP},
+    L_ENCRYPT => $ENV{L_ENCRYPT},
+    L_SIGNIFY => $ENV{L_SIGNIFY},
+);
+
 GetOptions(
     \%options,
     qw{ verbose help version }
