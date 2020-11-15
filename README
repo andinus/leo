@@ -9,7 +9,6 @@ Table of Contents
 ─────────────────
 
 1. Installation
-.. 1. OpenBSD
 2. Demo
 
 
@@ -33,26 +32,14 @@ with signify(1).
   │ # Install dependencies with cpanm.
   │ cpanm --installdeps .
   │
+  │ # Install all the dependencies.
+  │ doas pkg_add p5-IPC-Run3 p5-Config-Tiny p5-Path-Tiny # OpenBSD only.
+  │
   │ # Copy the config.
   │ cp share/leo.conf $HOME/.config/leo.conf
   │
   │ # Copy the script & make it executable.
   │ sudo make install
-  └────
-
-
-1.1 OpenBSD
-───────────
-
-  Clone & copy the config as shown above, then run these to install
-  dependencies & leo.
-  ┌────
-  │ # Install all the dependencies. (OpenBSD)
-  │ doas pkg_add p5-IPC-Run3 p5-Config-Tiny p5-Path-Tiny
-  │
-  │ # The man-path `/usr/local/share/man` is not indexed by default on
-  │ # openbsd. Using the `/usr` prefix works around this issue.
-  │ doas make PREFIX=/usr install
   └────
 
 
