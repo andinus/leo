@@ -10,7 +10,7 @@ use Config::Tiny;
 use POSIX qw(strftime);
 use Getopt::Long qw/ GetOptions /;
 
-my $version = "leo v0.4.0";
+my $version = "leo v0.4.1";
 
 # Options.
 my %options = (
