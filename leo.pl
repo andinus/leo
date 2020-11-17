@@ -9,7 +9,7 @@ use Config::Tiny;
 use POSIX qw(strftime);
 use Getopt::Long qw/ GetOptions /;
 
-my $version = "leo v0.4.3";
+my $version = "leo v0.4.4";
 
 # Options.
 my %options = (
@@ -230,4 +230,4 @@ Profile:\n};
 sub tar_create { run3 ["/bin/tar", "cf", @_]; }
 sub tar_list { print "\n"; run3 ["/bin/tar", "tvf", @_]; print "\n";}
 
-sub date { return strftime '%FT%T%z', gmtime() }
+sub date { return strftime '%FT%T%z', localtime() }
