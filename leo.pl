@@ -85,6 +85,8 @@ my @gpg_recipients;
     if $options{gpg_recipients};
 
 my $gpg_bin = $options{gpg_bin} || "gpg";
+warn "[WARN] \$gpg_bin is set to `$gpg_bin'"
+    unless $gpg_bin eq "gpg" or $gpg_bin eq "gpg2";
 
 # Print help.
 HelpMessage() and exit 0 if scalar @ARGV == 0 or $options{help};
