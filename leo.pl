@@ -2,7 +2,6 @@
 
 use strict;
 use warnings;
-use feature 'say';
 
 use IPC::Run3;
 use Path::Tiny;
@@ -10,7 +9,7 @@ use Config::Tiny;
 use POSIX qw(strftime);
 use Getopt::Long qw/ GetOptions /;
 
-my $version = "leo v0.4.1";
+my $version = "leo v0.4.3";
 
 # Options.
 my %options = (
@@ -78,15 +77,13 @@ foreach my $prof (sort keys $config->%*) {
 my $date = date();
 my $backup_dir = $options{backup_dir} || "/tmp/backups";
 
-my $gpg_fingerprint = $options{gpg_fingerprint} || "`nil'";
-
 my @gpg_recipients;
 @gpg_recipients = split / /, $options{gpg_recipients}
     if $options{gpg_recipients};
 
 my $gpg_bin = $options{gpg_bin} || "gpg";
 warn "[WARN] \$gpg_bin is set to `$gpg_bin'"
-    unless $gpg_bin eq "gpg" or $gpg_bin eq "gpg2";
+    unless $gpg_bin =~ /^[gpg|gpg2]$/;
 
 # Print help.
 HelpMessage() and exit 0 if scalar @ARGV == 0 or $options{help};
@@ -94,7 +91,12 @@ HelpMessage() and exit 0 if scalar @ARGV == 0 or $options{help};
 # Parsing the arguments.
 foreach my $prof ( @ARGV ) {
     if ( $profile{ $prof } ) {
-        say "++++++++********++++++++";
+        print "--------  $prof";
+        print " [Encrypt]" if $profile{$prof}{L_ENCRYPT};
+        print " [Sign]"    if $profile{$prof}{L_SIGN};
+        print " [Signify]" if $profile{$prof}{L_SIGNIFY};
+        print " [gzip]"    if $profile{$prof}{L_GZIP};
+        print "\n";
 
         my $file = "$backup_dir/${prof}/${date}.tar";
         $file .= ".gz" if $profile{$prof}{L_GZIP};
@@ -102,12 +104,11 @@ foreach my $prof ( @ARGV ) {
         path("$backup_dir/${prof}")->mkpath; # Create backup directory.
         backup($prof, $file);
 
-        encrypt_sign($prof, $file) if $profile{$prof}{L_SIGN} or $profile{$prof}{L_ENCRYPT};
+        my $is_gpg_req = 1 if $profile{$prof}{L_SIGN} or $profile{$prof}{L_ENCRYPT};
+        encrypt_sign($prof, $file) if $is_gpg_req;
 
-        # gpg would've removed the `.tar' file so we sign the
-        # encrypted file instead.
-        my $encrypted_file = "${file}.gpg";
-        $file = $encrypted_file if $profile{$prof}{L_SIGN} or $profile{$prof}{L_ENCRYPT};
+        # gpg would've removed the `.tar' file.
+        $file = "${file}.gpg" if $is_gpg_req;
         signify($prof, $file) if $profile{$prof}{L_SIGNIFY};
     } else {
         warn "[WARN] leo: no such profile :: `$prof' \n";
@@ -118,49 +119,40 @@ sub backup {
     my $prof = shift @_;
     my $tar_file = shift @_;
 
-    my @options;
+    my @options = ("-C", "/");
     push @options, "-z" if $profile{$prof}{L_GZIP};
 
-    # Make @backup_paths relative to '/'.
     my @backup_paths;
-
-    my @tmp_exclude;
-    @tmp_exclude = $profile{$prof}{exclude}->@*
-        if $profile{$prof}{exclude};
-    my %exclude_paths = map { $_ => 1 } @tmp_exclude;
-
-    my @tmp_paths = $profile{$prof}{backup}->@*;
-    while (my $path = shift @tmp_paths) {
-        # If it's a directory then check if we need to exclude any
-        # child path.
+    foreach my $path ($profile{$prof}{backup}->@*) {
+        # If it's a directory then walk it upto 1 level.
         if (-d $path) {
             my $iter = path($path)->iterator();
-            while ( my $path = $iter->() ) {
-                push @backup_paths, path( $path )->relative('/')
-                    unless $exclude_paths{$path};
+            while ( my $iter_path = $iter->() ) {
+                push @backup_paths, path( $iter_path );
             }
         } else {
-            push @backup_paths, path( $path )->relative('/');
+            push @backup_paths, path( $path );
         }
     }
 
-    say "Backup: $tar_file";
-    warn "[WARN] $tar_file exists, might overwrite.\n" if -e $tar_file;
-    print "\n";
+    # Remove files that are to be excluded.
+    foreach my $exclude ($profile{$prof}{exclude}->@*) {
+        @backup_paths = grep !/$exclude/, @backup_paths;
+    }
 
     # All paths should be relative to '/'.
-    tar_create($tar_file, @options, "-C", '/', @backup_paths);
+    @backup_paths = map { $_->relative('/') } @backup_paths;
 
+    tar_create($tar_file, @options, @backup_paths);
     $? # tar returns 1 on errors.
         ? die "Backup creation failed :: $?\n"
-        # Print absolute paths for all backup files/directories.
-        : say path($_)->absolute('/'), " backed up." foreach @backup_paths;
+        : print "Backup: $tar_file\n";
 
-    path($tar_file)->chmod(0600)
-        and print "Changed `$tar_file' mode to 0600.\n";
-    print "File was compressed with gzip(1)\n" if $profile{$prof}{L_GZIP};
+    path($tar_file)->chmod(0600);
+    print "File was compressed with gzip(1).\n"
+        if $profile{$prof}{L_GZIP} and $options{verbose};
 
-    print "\n" and tar_list($tar_file) if $options{verbose};
+    tar_list($tar_file) if $options{verbose};
 }
 
 # Encrypt, Sign backups.
@@ -169,11 +161,13 @@ sub encrypt_sign {
     my $file = shift @_;
 
     my @options = ();
-    push @options, "--default-key", $gpg_fingerprint;
+    push @options, "--default-key", $options{gpg_fingerprint}
+        if $options{gpg_fingerprint};
 
     if ( $profile{$prof}{L_ENCRYPT} ) {
         push @options, "--encrypt";
-        push @options, "--recipient", $gpg_fingerprint;
+        push @options, "--recipient", $options{gpg_fingerprint}
+            if $options{gpg_fingerprint};
         push @options, "--recipient", $_
             foreach @gpg_recipients;
     }
@@ -181,65 +175,49 @@ sub encrypt_sign {
     push @options, "--sign" if $profile{$prof}{L_SIGN};
     push @options, "--verbose" if $options{verbose};
 
-    say "\nEncrypt/Sign: $file";
-    warn "[WARN] $file.gpg exists, might overwrite.\n" if -e "$file.gpg";
-
-    run3 [$gpg_bin, "--yes", "-o", "$file.gpg", @options, $file];
+    run3 [$gpg_bin, "--yes", "-o", "${file}.gpg", @options, $file];
 
     $? # We assume non-zero is an error.
-        ? die "Encrypt/Sign failed :: $?\n"
-        : print "\nOutput: $file.gpg";
-    print " [Encrypted]" if $profile{$prof}{L_ENCRYPT};
-    print " [Signed]" if $profile{$prof}{L_SIGN};
-    print "\n";
+        ? die "GPG failed :: $?\n"
+        : print "GPG: $file.gpg\n";
 
-    unlink $file and say "$file deleted."
-        or warn "[WARN] Could not delete $file: $!\n";
+    unlink $file or warn "[WARN] Could not delete `$file': $!\n";
 
-    path("$file.gpg")->chmod(0600)
-        and print "Changed `$file.gpg' mode to 0600.\n";
+    path("$file.gpg")->chmod(0600);
 }
 
 sub signify {
     my $prof = shift @_;
     my $file = shift @_;
 
-    die "\nSignify: seckey doesn't exist\n"
-        unless $options{signify_seckey} and -e $options{signify_seckey};
-
-    my @options = ("-S");
-    push @options, "-s", $options{signify_seckey};
-    push @options, "-m", $file;
-    push @options, "-x", "$file.sig";
-
-    say "\nSignify: $file";
-    warn "[WARN] $file.sig exists, might overwrite.\n" if -e "$file.sig";
+    my @options = ( "-S",
+                    "-s", $options{signify_seckey},
+                    "-m", $file,
+                    "-x", "${file}.sig",
+                );
 
     run3 ["signify", @options];
-
-    $? # We assume non-zero is an error.
+    $? # Non-zero exit code is an error.
         ? die "Signify failed :: $?\n"
-        : print "\nOutput: $file.sig";
-    print " [Signify]";
-    print "\n";
+        : print "Signify: ${file}.sig\n";
 }
 
 sub HelpMessage {
-    say qq{Backup files to $backup_dir.
+    print qq{Backup files to $backup_dir.
 
-+ means included
-- means excluded
-
-Profile:};
+Profile:\n};
     foreach my $prof (sort keys %profile) {
         print "    $prof";
-        print " [Encrypt]" if $profile{$prof}{L_ENCRYPT};
-        print " [Sign]" if $profile{$prof}{L_SIGN};
-        print " [Signify]" if $profile{$prof}{L_SIGNIFY};
-        print " [gzip]" if $profile{$prof}{L_GZIP};
-        print "\n";
-        print "        + $_\n" foreach $profile{$prof}{backup}->@*;
-        print "        - $_\n" foreach $profile{$prof}{exclude}->@*;
+        if ($options{verbose}) {
+            print " [Encrypt]" if $profile{$prof}{L_ENCRYPT};
+            print " [Sign]" if $profile{$prof}{L_SIGN};
+            print " [Signify]" if $profile{$prof}{L_SIGNIFY};
+            print " [gzip]" if $profile{$prof}{L_GZIP};
+            print "\n";
+
+            print "        + $_\n" foreach $profile{$prof}{backup}->@*;
+            print "        - $_\n" foreach $profile{$prof}{exclude}->@*;
+        }
         print "\n";
     }
     print qq{Options:
@@ -250,6 +228,6 @@ Profile:};
 }
 
 sub tar_create { run3 ["/bin/tar", "cf", @_]; }
-sub tar_list { run3 ["/bin/tar", "tvf", @_]; }
+sub tar_list { print "\n"; run3 ["/bin/tar", "tvf", @_]; print "\n";}
 
 sub date { return strftime '%FT%T%z', gmtime() }
