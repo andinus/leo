@@ -202,6 +202,8 @@ sub HelpMessage {
         Increase verbosity.
     -p
         Print profiles.
+    -P
+        Print profiles with all the files to backup/exclude.
     -h
         Print help.
 };
