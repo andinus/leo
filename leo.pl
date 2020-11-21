@@ -10,8 +10,8 @@ use POSIX qw(strftime);
 
 die "usage: leo [-hpvV] <profile>\n" unless scalar @ARGV;
 
-my ($VERBOSE, $PRINT_PROFILES);
-my $VERSION = "v0.5.0";
+my ($VERBOSE, $PRINT_PROFILES, $PRINT_PROFILES_VERBOSE);
+my $VERSION = "v0.5.1";
 
 # Dispatch table to be parsed before url.
 my %dispatch = (
@@ -19,6 +19,7 @@ my %dispatch = (
     '-v'  => sub { $VERBOSE = 1; },
     '-h'  => \&HelpMessage,
     '-p'  => sub { $PRINT_PROFILES = 1; },
+    '-P'  => sub { $PRINT_PROFILES = 1; $PRINT_PROFILES_VERBOSE = 1; },
 );
 if (exists $dispatch{$ARGV[0]}) {
     # shift @ARGV to get profile in next shift.
@@ -132,7 +133,7 @@ sub run_gnupg {
     my $prof = shift @_;
     my $file = shift @_;
 
-    my @options = ( "--sign", "--encrypt",
+    my @options = ( "--encrypt",
                     "--yes",
                     "-o", "${file}.gpg"
                 );
@@ -141,6 +142,8 @@ sub run_gnupg {
         "--default-key", $options{gpg_fingerprint},
         "--recipient", $options{gpg_fingerprint}
         if $options{gpg_fingerprint};
+
+    push @options, "--sign" unless $profile{$prof}{L_GnuPG_no_sign};
 
     # Add recipients.
     my @gpg_recipients;
@@ -180,12 +183,15 @@ sub PrintProfiles {
     foreach my $prof (sort keys %profile) {
         print "    $prof";
         print " [GnuPG]" if $profile{$prof}{L_GnuPG};
+        print " [No Sign]" if $profile{$prof}{L_GnuPG_no_sign};
         print " [Signify]" if $profile{$prof}{L_signify};
         print "\n";
 
-        print "        + $_\n" foreach $profile{$prof}{backup}->@*;
-        print "        - $_\n" foreach $profile{$prof}{exclude}->@*;
-        print "\n";
+        if ($PRINT_PROFILES_VERBOSE) {
+            print "        + $_\n" foreach $profile{$prof}{backup}->@*;
+            print "        - $_\n" foreach $profile{$prof}{exclude}->@*;
+            print "\n";
+        }
     }
 }
 sub HelpMessage {
