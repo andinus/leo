@@ -1,11 +1,11 @@
-.TH LEO 1 "15 November 2020" "v0.4.1"
+.TH LEO 1 "21 November 2020" "v0.5.0"
 
 .SH NAME
 leo \- a simple backup program
 
 .SH SYNOPSIS
 .B leo
-[--help] [--version] [--verbose] profiles
+[-hpvV] profiles
 .P
 
 .SH DESRIPTION
@@ -23,35 +23,17 @@ up.
 .SH OPTIONS
 The options are as follows:
 .TP
-.B --verbose
-Verbose output. This flag will be passed to commands that leo
-executes.
+.B -h
+Print help.
 .TP
-.BI --version
+.B -p
+Print profiles.
+.TP
+.B -v
+Increase verbosity.
+.TP
+.B -V
 Print version.
 .TP
-.B --help
-Print help. This will also print list of profiles with their
-configuration.
-.SH ENVIRONMENT VARIABLES
-As shown in examples below, environment variables can be used to
-configure leo.
-
-Available options are:
-.B L_ENCRYPT
-.B L_SIGN
-.B L_SIGNIFY
-.B L_GZIP
-.SH EXAMPLES
-.TP
-.B leo journal emacs
-Backup `journal' & `emacs' profile.
-.TP
-.B L_ENCRYPT=1 leo journal
-Backup `journal' & encrypt it. This encrypt option can be over-ridden
-by the config file.
-.SH BUGS
-It'll set the tar & gpg output file's mode to 0600 & there is no way
-to configure that.
 .SH AUTHOR
 Andinus <andinus@nand.sh>
