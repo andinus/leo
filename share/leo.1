@@ -1,0 +1,26 @@
+.TH LEO 1 "04 January 2021" "v0.6.0"
+
+.SH NAME
+leo \- a simple backup program
+.SH SYNOPSIS
+.B leo
+[-v|--verbose] [--version] <action> [<profiles> ...]
+.P
+.SH DESRIPTION
+.B leo
+is a simple backup program. It creates tar(1) files from a pre-defined
+list. It can also encrypt/sign files with gpg2(1).
+
+I use this to quickly backup some of my files. It works on profiles,
+profiles are simple lists of files which get backed up.
+.SH ACTIONS
+The actions are as follows:
+.TP
+.B backup
+Backup the given profile.
+.TP
+.B rotate
+Rotate the given profile's backups.
+.TP
+.SH AUTHOR
+Andinus <andinus@nand.sh>

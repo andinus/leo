@@ -1,0 +1,25 @@
+backup = "/tmp/backups"
+base_dir = "/home/andinus" # Default base_dir.
+
+[gpg] # GnuPG related configuration.
+sign = true
+encrypt = true
+
+fingerprint = "andinus@nand.sh"
+recipients = ["D9AE4AEEE1F1B3598E81D9DFB67D55D482A799FD"]
+
+[rotate]
+hold = 1 # Hold these many old backups.
+keep = 2 # Keep these many latest backups.
+
+[profiles]
+[profiles.journal]
+encrypt = false
+paths = ["journal.org.gpg"]
+      [profiles.journal.rotate]
+      hold = 2
+      keep = 4
+
+[profiles.projects]
+base_dir = "/home/andinus/projects"
+# Not specifying paths is okay, it'll just archive base_dir.

@@ -10,11 +10,11 @@ Table of Contents
 
 1. Installation
 2. Demo
+3. History
 
 
 Leo is a simple backup program. It creates tar(1) files from a
-pre-defined list. It can encrypt/sign files with gpg2(1) & sign files
-with signify(1).
+pre-defined list. It can encrypt/sign files with gpg2(1).
 
 • Web-site: <https://andinus.nand.sh/leo>
 • Source: <https://git.tilde.institute/andinus/leo>
@@ -29,14 +29,8 @@ with signify(1).
   │ git clone https://git.tilde.institute/andinus/leo
   │ cd leo
   │
-  │ # Install dependencies with cpanm.
-  │ cpanm --installdeps .
-  │
-  │ # Install all the dependencies.
-  │ doas pkg_add p5-IPC-Run3 p5-Config-Tiny p5-Path-Tiny # OpenBSD only.
-  │
   │ # Copy the config.
-  │ cp share/leo.conf $HOME/.config/leo.conf
+  │ cp share/leo.toml $HOME/.config/leo.toml
   │
   │ # Copy the script & make it executable.
   │ sudo make install
@@ -59,3 +53,10 @@ with signify(1).
 
 [cast file]
 <https://andinus.nand.sh/static/leo/2020-08-31_leo-demo.cast>
+
+
+3 History
+═════════
+
+  Leo was a Perl script until v0.5.1, it was ported to Raku in next
+  release.

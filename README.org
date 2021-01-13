@@ -1,0 +1,36 @@
+#+SETUPFILE: ~/.emacs.d/org-templates/projects.org
+#+EXPORT_FILE_NAME: index
+#+OPTIONS: toc:3
+#+TITLE: Leo
+
+Leo is a simple backup program. It creates tar(1) files from a
+pre-defined list. It can encrypt/sign files with gpg2(1).
+
+- Web-site: https://andinus.nand.sh/leo
+- Source: https://git.tilde.institute/andinus/leo
+- Source (mirror): https://github.com/andinus/leo
+
+* Installation
+#+BEGIN_SRC sh
+# Clone the project.
+git clone https://git.tilde.institute/andinus/leo
+cd leo
+
+# Copy the config.
+cp share/leo.toml $HOME/.config/leo.toml
+
+# Copy the script & make it executable.
+sudo make install
+#+END_SRC
+* Demo
+It's very easy to setup =leo=, I made a demo video to show this. I already
+have Perl environment setup for this.
+
+*Note*: Leo has changed *a lot* since this was published.
+
+- Leo 2020-08-31: https://asciinema.org/a/F97hVfgXDcd9g5IlST1t27ps3
+
+You can also download the [[https://andinus.nand.sh/static/leo/2020-08-31_leo-demo.cast][cast file]] directly & play it with =asciinema=.
+* History
+Leo was a Perl script until v0.5.1, it was ported to Raku in next
+release.

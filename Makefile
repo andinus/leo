@@ -4,7 +4,7 @@ PREFIX?=/usr/local
 
 INSTALL?=install
 INSTALL_PROGRAM=$(INSTALL) -Dm 755
-INSTALL_DATA=$(INSTALL) -Dm 644
+INSTALL_DATA=install -Dm 644
 
 bindir=$(DESTDIR)$(PREFIX)/bin
 sharedir=$(DESTDIR)$(PREFIX)/share
@@ -24,13 +24,14 @@ help:
 	| sed -n 's/^\(.*\): \(.*\)#\(.*\)/  \1|-\3/p' \
 	| column -t  -s '|'
 
-install: leo.pl leo.1 share/leo.conf README # system install
-	$(INSTALL_PROGRAM) leo.pl $(bindir)/leo
+install: leo.raku share/leo.1 share/leo.toml README README.org # system install
+	$(INSTALL_PROGRAM) leo.raku $(bindir)/leo
 
-	$(INSTALL_DATA) leo.1 $(mandir)/man1/leo.1
-	$(INSTALL_DATA) share/leo.conf $(sharedir)/leo/leo.conf
+	$(INSTALL_DATA) share/leo.1 $(mandir)/man1/leo.1
+	$(INSTALL_DATA) share/leo.toml $(sharedir)/leo/leo.toml
+
 	$(INSTALL_DATA) README $(sharedir)/doc/leo/README
-
+	$(INSTALL_DATA) README.org $(sharedir)/doc/leo/README.org
 
 uninstall: # system uninstall
 	rm -f $(bindir)/leo
